@@ -48,7 +48,9 @@ body {
 .main-container {
     display: flex;
     flex-grow: 1;
-    height: calc(100vh - 250px); /* Leaves room for header and terminal */
+    height: calc(100vh - 250px);
+    width: 100vw;
+    min-height: 0;
 }
 
 .sidebar {
@@ -56,6 +58,7 @@ body {
     background-color: #252526;
     border-right: 1px solid #444;
     padding: 10px;
+    flex-shrink: 0;
 }
 
 .sidebar h3 {
@@ -82,8 +85,11 @@ body {
 }
 
 #editor-container {
-    flex-grow: 1;
+    flex: 1;
     height: 100%;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
 }
 
 .terminal-container {
@@ -110,4 +116,5 @@ body {
     padding: 10px 20px;
     font-size: 13px;
     overflow-y: auto;
+    white-space: pre-wrap;
 }

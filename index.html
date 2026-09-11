@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gaslight IDE</title>
+    <!-- Verify whether your file is style.css or styles.css -->
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -17,10 +18,10 @@
         <div class="sidebar">
             <h3>EXPLORER</h3>
             <ul>
-                <li class="active-file">📄 index.js</li>
-                <li>📄 style.css</li>
-                <li>📄 utils.js</li>
-                <li>📁 node_modules (fake)</li>
+                <li class="active-file">🐍 main.py</li>
+                <li>🐍 utils.py</li>
+                <li>📄 requirements.txt</li>
+                <li>📁 __pycache__</li>
             </ul>
         </div>
 
@@ -34,10 +35,16 @@
         <div id="console-output"></div>
     </div>
 
-    <!-- Monaco Editor CDN -->
+    <!-- 1. Monaco AMD Loader CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
-    <script src="js/editor.js"></script>
+    
+    <!-- 2. LLM engine first, so getEvilSuggestion is defined -->
     <script src="js/llm.js"></script>
+    
+    <!-- 3. Editor mounts Monaco and attaches autocomplete provider -->
+    <script src="js/editor.js"></script>
+    
+    <!-- 4. Gaslight handles fake run toggles -->
     <script src="js/gaslight.js"></script>
 </body>
 </html>
