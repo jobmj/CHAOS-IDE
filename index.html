@@ -15,12 +15,13 @@
     <div class="main-container">
         <!-- Fake File Explorer -->
         <div class="sidebar">
+            <!-- Inside <div class="sidebar"> -->
             <h3>EXPLORER</h3>
-            <ul>
-                <li class="active-file">📄 index.js</li>
-                <li>📄 style.css</li>
-                <li>📄 utils.js</li>
-                <li>📁 node_modules (fake)</li>
+            <ul id="file-tree">
+                <li class="file-item active-file" data-file="index.js">📄 index.js</li>
+                <li class="file-item" data-file="style.css">📄 style.css</li>
+                <li class="file-item" data-file="utils.js">📄 utils.js</li>
+                <li class="file-item" data-file="node_modules">📁 node_modules (fake)</li>
             </ul>
         </div>
 

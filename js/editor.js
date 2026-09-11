@@ -9,3 +9,4 @@ require(['vs/editor/editor.main'], function() {
         automaticLayout: true
     });
 });
+

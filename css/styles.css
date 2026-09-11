@@ -111,3 +111,29 @@ body {
     font-size: 13px;
     overflow-y: auto;
 }
+
+/* 1. Set the background image on the main container */
+#editor-container {
+    flex-grow: 1;
+    height: 100%;
+    position: relative;
+    /* Path to your meme image inside the assets/ folder */
+    background-image: url('../assets/convinced.png');
+    background-size: contain; /* Or 'cover' depending on your meme dimensions */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #1e1e1e; /* Keep dark background around image edges */
+}
+
+/* 2. Force Monaco's internal elements to be transparent so the meme shows through */
+#editor-container .monaco-editor,
+#editor-container .monaco-editor-background,
+#editor-container .monaco-editor .margin {
+    background-color: rgba(30, 30, 30, 0.52) !important; /* Adjust 0.82 (opacity) to make meme lighter/darker */
+}
+
+/* 3. Ensure the current active code line doesn't block the background */
+#editor-container .monaco-editor .current-line {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: none !important;
+}
