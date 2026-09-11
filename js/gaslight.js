@@ -1,58 +1,185 @@
-function initGaslight() {
-    const runBtn = document.getElementById("run-btn");
+let pyodideInstance = null;
+let isPythonLoading = true;
+let pyodideBootError = null;
+
+function printToTerminal(text, color = "#00f0ff") {
     const output = document.getElementById("console-output");
+    if (output) {
+        output.innerText = text;
+        output.style.color = color;
+    }
+}
 
-    if (!runBtn || !output) return;
+/**
+ * Initializes Pyodide asynchronously in background without blocking Monaco or the circular meter
+ */
+async function initPyodideRuntime() {
+    printToTerminal(">> [SYSTEM]: INITIALIZING NEON WEBASSEMBLY RUNTIME...", "#00f0ff");
 
-    runBtn.addEventListener("click", () => {
-        const model = window.editor ? window.editor.getModel() : null;
-        const code = model ? model.getValue() : "";
-        const currentCh = getCurrentChallenge();
+    if (window.location.protocol === "file:") {
+        const errorMsg = 
+`>> [SECURITY PROTOCOL VIOLATION]:
+WebAssembly execution is blocked on file:// by modern browsers.
+Serve this directory with a local HTTP server:
+  Run: python -m http.server 8000
+  Open: http://localhost:8000`;
+        printToTerminal(errorMsg, "#ff003c");
+        isPythonLoading = false;
+        pyodideBootError = "file:// protocol blocked";
+        return;
+    }
 
-        // 1. STOP THE TIMER AND GRAB THE FINAL TIME
-        let finalTime = "0.00";
-        if (typeof stopSpeedrunTimer === 'function') {
-            finalTime = stopSpeedrunTimer();
+    try {
+        let loaderFn = window.loadPyodide;
+        if (!loaderFn && typeof require !== "undefined" && require.defined) {
+            try {
+                loaderFn = require("pyodide")?.loadPyodide;
+            } catch (e) {}
         }
 
-        // Check for common Python corruptions
-        const hasSyntaxErrors = code.includes("* 0") || 
-                                (code.match(/\(/g) || []).length !== (code.match(/\)/g) || []).length ||
-                                (code.match(/\[/g) || []).length !== (code.match(/\]/g) || []).length;
+        if (typeof loaderFn !== "function") {
+            throw new Error("Pyodide script tag failed to initialize global loader.");
+        }
 
-        const missingKeyParts = currentCh.solutionKeywords.some(kw => !code.includes(kw));
-        const containsSabotage = currentCh.antiKeywords.some(bad => code.includes(bad));
+        printToTerminal(">> [RUNTIME]: COMPILING CPYTHON 3.12 KERNEL (~8MB)...", "#ff9100");
 
-        if (hasSyntaxErrors || missingKeyParts || containsSabotage) {
-            output.innerText = 
-`❌ [FAILED TEST SUITE]
---------------------------------------------------
-Traceback (most recent call last):
-  AssertionError: Challenge validation failed!
-  Code contains lingering syntax corruption or invalid return logic.
+        pyodideInstance = await loaderFn({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"
+        });
 
-[Hint]: Fix any broken syntax and corrupted operators before submitting!`;
-            output.style.color = "#f44336";
+        await pyodideInstance.runPythonAsync("import sys");
+
+        isPythonLoading = false;
+        printToTerminal(
+`>> [RUNTIME READY]: CPython 3.12 WebAssembly Kernel Online.
+>> Survive the attack phase until meltdown, clean the code, and click 'Run & Verify'.`, 
+            "#00ff66"
+        );
+    } catch (err) {
+        isPythonLoading = false;
+        pyodideBootError = String(err);
+        printToTerminal(`>> [FATAL BOOT ERROR]:\n${err}`, "#ff003c");
+        console.error("[Pyodide Boot]", err);
+    }
+}
+
+/**
+ * Runs code through Pyodide against current challenge assertions
+ */
+async function executePythonCode(userCode, testSuiteCode) {
+    if (pyodideBootError) {
+        return {
+            passed: false,
+            stdout: "",
+            stderr: `Execution aborted: Runtime failed to initialize.\n${pyodideBootError}`
+        };
+    }
+
+    if (isPythonLoading || !pyodideInstance) {
+        return {
+            passed: false,
+            stdout: "",
+            stderr: "Python WebAssembly engine is still compiling. Stand by..."
+        };
+    }
+
+    const testRunnerWrapper = `
+import sys
+import io
+import traceback
+
+sys.stdout = io.StringIO()
+sys.stderr = io.StringIO()
+
+execution_result = {
+    "passed": False,
+    "stdout": "",
+    "stderr": ""
+}
+
+try:
+    # 1. Execute User Solution
+${userCode.split('\n').map(l => '    ' + l).join('\n')}
+
+    # 2. Execute Test Assertions
+${testSuiteCode.split('\n').map(l => '    ' + l).join('\n')}
+
+    execution_result["passed"] = True
+    execution_result["stdout"] = sys.stdout.getvalue()
+except Exception:
+    execution_result["passed"] = False
+    execution_result["stderr"] = traceback.format_exc()
+
+execution_result
+`;
+
+    try {
+        const resultPyProxy = await pyodideInstance.runPythonAsync(testRunnerWrapper);
+        const result = {
+            passed: resultPyProxy.get("passed"),
+            stdout: resultPyProxy.get("stdout"),
+            stderr: resultPyProxy.get("stderr")
+        };
+        resultPyProxy.destroy();
+        return result;
+    } catch (err) {
+        return {
+            passed: false,
+            stdout: "",
+            stderr: String(err)
+        };
+    }
+}
+
+function initSubmissionHandler() {
+    const runBtn = document.getElementById("run-btn");
+    if (!runBtn) return;
+
+    runBtn.addEventListener("click", async () => {
+        if (!window.editor) return;
+
+        const userCode = window.editor.getValue();
+        const currentCh = getCurrentChallenge();
+
+        runBtn.disabled = true;
+        const originalText = runBtn.innerText;
+        runBtn.innerText = "VERIFYING...";
+
+        printToTerminal(`>> [EXECUTING]: Running ${currentCh.title} through test matrix...\n------------------------------------------------------------\n`, "#00f0ff");
+
+        const res = await executePythonCode(userCode, currentCh.testScript);
+
+        runBtn.disabled = false;
+        runBtn.innerText = originalText;
+
+        if (res.passed) {
+            printToTerminal(
+`[STATUS: MISSION ACCOMPLISHED]
+============================================================
+${res.stdout}
+>> ALL TEST CASES PASSED WITH EXIT CODE 0.
+>> The defense protocol held! Click 'Next Mission' to advance.`,
+                "#00ff66"
+            );
         } else {
-            // 2. INJECT THE FINAL TIME INTO THE SUCCESS MESSAGE
-            output.innerText = 
-`🎉 [CHALLENGE COMPLETED SUCCESSFULLY!]
---------------------------------------------------
-Test 1: PASSED
-Test 2: PASSED
-All test cases executed with exit code 0.
+            printToTerminal(
+`[STATUS: COMPILATION / ASSERTION BREACH]
+============================================================
+${res.stderr || "Unknown runtime execution error."}
 
-⏱️ CLEAR TIME: ${finalTime} seconds!
-
-You beat the agent during the cooldown window!
-Click 'Next Challenge' to start the next round.`;
-            output.style.color = "#4CAF50";
+>> [HINT]: Inspect line mutations and clean up syntax flaws before re-verifying.`,
+                "#ff003c"
+            );
         }
     });
 }
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGaslight);
+    document.addEventListener('DOMContentLoaded', () => {
+        initSubmissionHandler();
+        setTimeout(initPyodideRuntime, 50);
+    });
 } else {
-    initGaslight();
+    initSubmissionHandler();
+    setTimeout(initPyodideRuntime, 50);
 }

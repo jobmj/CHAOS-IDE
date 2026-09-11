@@ -3,63 +3,636 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De-Copilot: Chaos Survival</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>ChaosIDE // Neon Survival</title>
+    <!-- Modern Cyberpunk Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- 1. Monaco Editor Loader -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    
+    <!-- 2. Pyodide CPython Engine -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+
+    <style>
+        :root {
+            --bg-void: #030308;
+            --bg-panel: #070913;
+            --bg-glass: rgba(10, 13, 26, 0.92);
+            --border-neon: #1a233d;
+            
+            --neon-pink: #ff0055;
+            --neon-red: #ff003c;
+            --neon-amber: #ff9100;
+            --neon-cyan: #00f0ff;
+            --neon-green: #00ff66;
+
+            --font-display: 'Orbitron', -apple-system, sans-serif;
+            --font-sub: 'Rajdhani', -apple-system, sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-void);
+            color: #d1dcff;
+            font-family: var(--font-sub);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .master-app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background: radial-gradient(circle at 50% 0%, #151824 0%, var(--bg-void) 80%);
+        }
+
+        /* Top Cyber Toolbar */
+        .neon-toolbar {
+            height: 60px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border-bottom: 2px solid rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .brand-core {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #ffffff;
+            text-shadow: 0 0 12px var(--neon-cyan);
+        }
+
+        .brand-logo span {
+            color: var(--neon-pink);
+            text-shadow: 0 0 14px var(--neon-pink);
+        }
+
+        .threat-pill {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 14px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .threat-pill.hunting {
+            background: rgba(255, 0, 60, 0.2);
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+            box-shadow: 0 0 16px rgba(255, 0, 60, 0.5);
+        }
+
+        .threat-pill.cooling {
+            background: rgba(0, 240, 255, 0.2);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+        }
+
+        .status-orb {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 0 0 10px currentColor;
+            animation: pulse-glow 1.2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.3); }
+        }
+
+        .deck-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .diff-selector-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(13, 17, 34, 0.9);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 6px;
+            padding: 5px 10px;
+        }
+
+        .diff-label {
+            font-family: var(--font-display);
+            font-size: 10px;
+            color: var(--neon-cyan);
+            letter-spacing: 1px;
+        }
+
+        .diff-selector-wrap select {
+            background: transparent;
+            color: #ffffff;
+            font-family: var(--font-sub);
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .diff-selector-wrap select option {
+            background: #0d1122;
+            color: #ffffff;
+        }
+
+        .btn-neon {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            padding: 8px 18px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-neon-secondary {
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 1px solid var(--neon-cyan);
+            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.2);
+        }
+
+        .btn-neon-secondary:hover {
+            background: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+        }
+
+        .btn-neon-primary {
+            background: var(--neon-green);
+            color: #030805;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.7);
+        }
+
+        .btn-neon-primary:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.9);
+            transform: scale(1.02);
+        }
+
+        .btn-neon-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Viewport Layout */
+        .viewport-deck {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            padding: 14px 18px;
+            gap: 16px;
+        }
+
+        /* Left Workspace Column */
+        .workspace-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            gap: 12px;
+        }
+
+        .mission-intel-card {
+            background: var(--bg-glass);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-left: 5px solid var(--neon-cyan);
+            padding: 12px 18px;
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .intel-tag {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--neon-cyan);
+            letter-spacing: 1.5px;
+        }
+
+        .mission-title {
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .mission-desc {
+            font-family: var(--font-sub);
+            font-size: 14px;
+            color: #92a4cc;
+            line-height: 1.3;
+        }
+
+        /* Monaco Editor Panel */
+        .editor-enclosure {
+            flex: 7;
+            min-height: 250px;
+            background: #05060b;
+            border: 1px solid var(--border-neon);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+        }
+
+        .editor-top-banner {
+            height: 32px;
+            background: #090c17;
+            border-bottom: 1px solid var(--border-neon);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+        }
+
+        .code-tab {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--neon-cyan);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #editor-container {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Terminal Enclosure */
+        .terminal-enclosure {
+            flex: 3;
+            min-height: 140px;
+            background: #020306;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.08);
+        }
+
+        .terminal-header {
+            height: 30px;
+            background: #090c16;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+        }
+
+        .terminal-label {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--neon-cyan);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-clear-term {
+            background: transparent;
+            border: none;
+            color: #697ea8;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .btn-clear-term:hover {
+            color: var(--neon-cyan);
+        }
+
+        .terminal-stream-wrap {
+            flex: 1;
+            padding: 12px 16px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        #console-output {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--neon-cyan);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Right Telemetry Radar Deck */
+        .sidebar-telemetry {
+            width: 320px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--border-neon);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+        }
+
+        .radar-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(26, 35, 61, 0.8);
+        }
+
+        .radar-title {
+            font-family: var(--font-display);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .circular-gauge-container {
+            position: relative;
+            width: 190px;
+            height: 190px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gauge-svg {
+            transform: rotate(-90deg);
+            width: 190px;
+            height: 190px;
+        }
+
+        .gauge-track {
+            fill: none;
+            stroke: #0c1022;
+            stroke-width: 12;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 471.24;
+            stroke-dashoffset: 471.24;
+            transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
+            stroke: var(--neon-red);
+            filter: drop-shadow(0 0 12px var(--neon-red));
+        }
+
+        .gauge-fill.cooling-mode {
+            stroke: var(--neon-cyan);
+            filter: drop-shadow(0 0 14px var(--neon-cyan));
+        }
+
+        .gauge-center-data {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gauge-value {
+            font-family: var(--font-display);
+            font-size: 34px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 18px rgba(255,255,255,0.6);
+        }
+
+        .gauge-unit {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #5c6c94;
+        }
+
+        .diag-readout-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .diag-item {
+            background: #060914;
+            border: 1px solid #13192d;
+            border-radius: 6px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .diag-meta {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 700;
+            color: #5d6f99;
+            letter-spacing: 1px;
+        }
+
+        .diag-val {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+        }
+
+        /* Targeted neon red laser pulse on the mutated line */
+        @keyframes neonLineSpike {
+            0% {
+                background-color: rgba(255, 0, 60, 0.85);
+                box-shadow: 0 0 35px #ff003c, inset 0 0 15px #ff0055;
+            }
+            50% {
+                background-color: rgba(255, 0, 60, 0.55);
+                box-shadow: 0 0 20px #ff003c, inset 0 0 8px #ff0055;
+            }
+            100% {
+                background-color: rgba(255, 0, 60, 0.25);
+                box-shadow: 0 0 8px rgba(255, 0, 60, 0.4);
+            }
+        }
+
+        .corrupted-line-highlight {
+            background-color: rgba(255, 0, 60, 0.55) !important;
+            border-left: 6px solid #ff003c !important;
+            animation: neonLineSpike 0.45s ease-out forwards;
+            z-index: 20;
+        }
+
+        .corrupted-line-glyph {
+            background: #ff003c;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff003c;
+            margin-left: 5px;
+        }
+    </style>
 </head>
 <body>
-    <div class="ide-container">
-        <!-- Game Toolbar -->
-        <header class="toolbar">
-            <div class="logo-group">
-                <span class="logo-title">⚡ Chaos IDE</span>
-                <!-- We will update this badge dynamically -->
-                <span id="game-status" class="badge hunting">🔥 AWAITING INPUT</span> 
-                <span id="diff-display" class="badge diff-badge">LVL 3</span>
+    <div class="master-app">
+        <!-- Top Toolbar -->
+        <header class="neon-toolbar">
+            <div class="brand-core">
+                <span class="brand-logo">CHAOS<span>IDE</span></span>
+                <div id="game-status" class="threat-pill hunting">
+                    <span class="status-orb"></span>
+                    <span id="threat-status-text">ATTACK ACTIVE</span>
+                </div>
             </div>
 
-            <div class="difficulty-control">
-                <label for="difficulty-select">Difficulty:</label>
-                <select id="difficulty-select">
-                    <option value="1">1 - Mild Annoyance</option>
-                    <option value="2">2 - Script Kiddie</option>
-                    <option value="3" selected>3 - Chaos Gremlin</option>
-                    <option value="4">4 - Code Demon</option>
-                    <option value="5">5 - APOCALYPSE</option>
-                    <option value="random">🎲 Random</option>
-                </select>
-            </div>
+            <div class="deck-controls">
+                <div class="diff-selector-wrap">
+                    <span class="diff-label">THREAT MATRIX:</span>
+                    <select id="difficulty-select">
+                        <option value="1">LVL 1 · Mild Annoyance</option>
+                        <option value="2">LVL 2 · Script Kiddie</option>
+                        <option value="3" selected>LVL 3 · Chaos Gremlin</option>
+                        <option value="4">LVL 4 · Code Demon</option>
+                        <option value="5">LVL 5 · APOCALYPSE</option>
+                        <option value="random">🎲 Random Shuffle</option>
+                    </select>
+                </div>
 
-            <div class="game-actions">
-                <div id="speedrun-timer" style="color: #4fc3f7; font-family: monospace; font-size: 16px; font-weight: bold; padding: 4px 12px;">0.00s</div>
-                <button id="next-challenge-btn" class="btn secondary">Next Challenge</button>
-                <button id="run-btn" class="btn run">▶ Submit & Test</button>
+                <button id="next-challenge-btn" class="btn-neon btn-neon-secondary">Next Mission</button>
+                <button id="run-btn" class="btn-neon btn-neon-primary">▶ Run & Verify</button>
             </div>
         </header>
 
-        <!-- Objective Banner -->
-        <div class="objective-banner">
-            <div id="challenge-title" class="challenge-title">Challenge: Two Sum</div>
-            <div id="challenge-desc" class="challenge-desc">Return the indices of the two numbers such that they add up to target.</div>
-        </div>
+        <!-- Viewport Deck -->
+        <main class="viewport-deck">
+            <!-- Left Workspace -->
+            <div class="workspace-main">
+                <section class="mission-intel-card">
+                    <div class="intel-header-row">
+                        <span class="intel-tag" id="challenge-cat">ARRAYS & HASHING</span>
+                    </div>
+                    <h2 class="mission-title" id="challenge-title">Challenge 01: Two Sum</h2>
+                    <p class="mission-desc" id="challenge-desc">Return the indices of the two numbers that add up to target.</p>
+                </section>
 
-        <!-- Editor & Output Workspace -->
-        <div class="workspace">
-            <div id="editor-container" class="editor-pane"></div>
-
-            <div class="terminal-pane">
-                <div class="terminal-header">
-                    <span>Test Suite & Output</span>
-                    <button id="clear-btn" class="btn-clear" onclick="document.getElementById('console-output').innerText = ''">Clear</button>
+                <div class="editor-enclosure">
+                    <div class="editor-top-banner">
+                        <div class="code-tab">
+                            <span>🐍</span>
+                            <span>solution.py</span>
+                        </div>
+                        <span style="font-family: var(--font-mono); font-size: 10px; color: #43537a;">UTF-8 / PYTHON 3.12</span>
+                    </div>
+                    <div id="editor-container"></div>
                 </div>
-                <pre id="console-output" class="terminal-output"></pre>
+
+                <div class="terminal-enclosure">
+                    <div class="terminal-header">
+                        <span class="terminal-label">TERMINAL TELEMETRY</span>
+                        <button class="btn-clear-term" id="clear-btn">Clear Buffer</button>
+                    </div>
+                    <div class="terminal-stream-wrap">
+                        <pre id="console-output"></pre>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <!-- Right Telemetry Deck -->
+            <aside class="sidebar-telemetry">
+                <div class="radar-card">
+                    <span class="radar-title" id="meter-label">CORE TEMPERATURE</span>
+                    
+                    <div class="circular-gauge-container">
+                        <svg class="gauge-svg" viewBox="0 0 190 190">
+                            <circle class="gauge-track" cx="95" cy="95" r="75"></circle>
+                            <circle id="gauge-circle-fill" class="gauge-fill" cx="95" cy="95" r="75"></circle>
+                        </svg>
+                        
+                        <div class="gauge-center-data">
+                            <span class="gauge-value" id="meter-digital-val">0</span>
+                            <span class="gauge-unit" id="meter-digital-unit">% HEAT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="diag-readout-grid">
+                    <div class="diag-item">
+                        <span class="diag-meta">CURRENT LEVEL</span>
+                        <span class="diag-val" id="diag-lvl-val">LVL 3</span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-meta">OVERHEAT THRESHOLD</span>
+                        <span class="diag-val">100%</span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-meta">DEFENSE LOCK</span>
+                        <span class="diag-val" id="diag-def-val">MUTATING</span>
+                    </div>
+                </div>
+            </aside>
+        </main>
     </div>
 
-    <script src="js/challenges.js"></script>
-    <script src="js/llm.js"></script>
-    <script src="js/editor.js"></script>
-    <script src="js/gaslight.js"></script>
+    <!-- Scripts with Cache Busters -->
+    <script src="js/challenges.js?v=3"></script>
+    <script src="js/llm.js?v=3"></script>
+    <script src="js/editor.js?v=3"></script>
+    <script src="js/gaslight.js?v=3"></script>
 </body>
 </html>

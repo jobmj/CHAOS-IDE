@@ -2,7 +2,7 @@ const OLLAMA_GENERATE_URL = "http://localhost:11434/api/generate";
 const MODEL_NAME = "qwen2.5-coder:7b";
 
 /**
- * Idiomatic Python sabotages that run locally without latency
+ * Local offline sabotages to fall back to without latency
  */
 function mutatePythonLineLocally(line) {
     if (line.endsWith(":") && (line.includes("def ") || line.includes("if ") || line.includes("for ") || line.includes("while "))) {
@@ -23,7 +23,7 @@ function mutatePythonLineLocally(line) {
 }
 
 /**
- * Requests context-aware Python corruption from Ollama with graceful local fallback
+ * Requests code mutation from Ollama with local fallback
  */
 async function requestPythonMutation(targetLine, mode = "evil", surroundingContext = "") {
     const cleanLine = targetLine.trim();

@@ -1,77 +1,28 @@
 let isMutating = false;
-let hasStartedTyping = false;
-let isEvilMode = true; // Tracks which phase we are in
-let phaseTimer = null; // Controls the phase switching
-let debounceTimer = null;
 let activeDecorations = [];
 
+// Circumference for r=75 (2 * PI * 75)
+const CIRCUMFERENCE = 471.24;
+
+// Phase timings & cadence configuration
 const DIFFICULTY_CONFIG = {
-    1: { name: "Mild Annoyance", debounceMs: 900, color: "#4caf50" },
-    2: { name: "Script Kiddie",   debounceMs: 700, color: "#8bc34a" },
-    3: { name: "Chaos Gremlin",   debounceMs: 500, color: "#ff9800" },
-    4: { name: "Code Demon",      debounceMs: 350, color: "#f44336" },
-    5: { name: "APOCALYPSE",      debounceMs: 200, color: "#9c27b0" }
+    1: { name: "Mild Annoyance", attackDurationSec: 16, cooldownSec: 14, strikeCadenceMs: 3000 },
+    2: { name: "Script Kiddie",   attackDurationSec: 18, cooldownSec: 12, strikeCadenceMs: 2600 },
+    3: { name: "Chaos Gremlin",   attackDurationSec: 20, cooldownSec: 10, strikeCadenceMs: 2200 },
+    4: { name: "Code Demon",      attackDurationSec: 24, cooldownSec: 8,  strikeCadenceMs: 2000 },
+    5: { name: "APOCALYPSE",      attackDurationSec: 28, cooldownSec: 6,  strikeCadenceMs: 1600 }
 };
 
 let activeLevel = 3;
 let isRandomDifficulty = false;
 
-// --- Speedrun Timer Logic ---
-let startTime = 0;
-let timerInterval = null;
+// Game Loop State
+let isCoolingDown = false;
+let currentPhaseSecondsLeft = 0;
+let phaseTotalSeconds = 20;
+let masterLoopInterval = null;
+let attackTimerInterval = null;
 
-function startSpeedrunTimer() {
-    clearInterval(timerInterval);
-    startTime = Date.now();
-    const timerDisplay = document.getElementById("speedrun-timer");
-    
-    timerInterval = setInterval(() => {
-        const elapsedTime = (Date.now() - startTime) / 1000;
-        if (timerDisplay) {
-            timerDisplay.innerText = elapsedTime.toFixed(2) + "s";
-        }
-    }, 50);
-}
-
-function stopSpeedrunTimer() {
-    clearInterval(timerInterval);
-    return ((Date.now() - startTime) / 1000).toFixed(2);
-}
-
-// --- Phase Loop Logic ---
-function updatePhaseUI(text, className) {
-    const badge = document.getElementById('game-status');
-    if (badge) {
-        badge.innerText = text;
-        badge.className = className;
-    }
-}
-
-function startPhaseLoop() {
-    clearTimeout(phaseTimer);
-
-    if (isEvilMode) {
-        // We are in EVIL MODE. Set next phase to Good Mode after 2 to 3 seconds.
-        updatePhaseUI("🔥 ATTACK PHASE", "badge hunting");
-        const duration = 15000; 
-        
-        phaseTimer = setTimeout(() => {
-            isEvilMode = false;
-            startPhaseLoop();
-        }, duration);
-    } else {
-        // We are in GOOD MODE. Set next phase to Evil Mode after 3 to 4 seconds.
-        updatePhaseUI("❄ SAFE WINDOW", "badge cooling");
-        const duration = 10000; 
-        
-        phaseTimer = setTimeout(() => {
-            isEvilMode = true;
-            startPhaseLoop();
-        }, duration);
-    }
-}
-
-// --- Initialization & UI ---
 function applyDifficulty(val) {
     if (val === "random") {
         isRandomDifficulty = true;
@@ -81,32 +32,123 @@ function applyDifficulty(val) {
         activeLevel = parseInt(val, 10);
     }
 
-    const conf = DIFFICULTY_CONFIG[activeLevel];
-    const diffBadge = document.getElementById("diff-display");
-    if (diffBadge) {
-        diffBadge.innerText = isRandomDifficulty ? `🎲 LVL ${activeLevel}` : `LVL ${activeLevel}`;
-        diffBadge.style.backgroundColor = conf.color;
+    const diagLvl = document.getElementById("diag-lvl-val");
+    if (diagLvl) {
+        diagLvl.innerText = isRandomDifficulty ? `🎲 LVL ${activeLevel}` : `LVL ${activeLevel}`;
     }
+
+    startAttackPhase();
 }
 
-function loadChallengeUI(challenge) {
-    document.getElementById("challenge-title").innerText = challenge.title;
-    document.getElementById("challenge-desc").innerText = challenge.desc;
-    if (window.editor) {
-        window.editor.setValue(challenge.starterCode);
-        setTimeout(() => window.editor.layout(), 50);
+function startAttackPhase() {
+    isCoolingDown = false;
+    clearInterval(masterLoopInterval);
+    clearInterval(attackTimerInterval);
+
+    const conf = DIFFICULTY_CONFIG[activeLevel];
+    phaseTotalSeconds = conf.attackDurationSec;
+    currentPhaseSecondsLeft = conf.attackDurationSec;
+
+    // UI Updates
+    const badge = document.getElementById('game-status');
+    const statusText = document.getElementById('threat-status-text');
+    const meterLabel = document.getElementById('meter-label');
+    const diagDef = document.getElementById('diag-def-val');
+    const gaugeCircle = document.getElementById('gauge-circle-fill');
+
+    if (badge) {
+        badge.className = "threat-pill hunting";
+        if (statusText) statusText.innerText = "ATTACK ACTIVE";
     }
-    
-    // Reset flags and UI for a new round
-    hasStartedTyping = false;
-    isEvilMode = true; 
-    clearTimeout(phaseTimer);
-    updatePhaseUI("🔥 AWAITING INPUT", "badge hunting");
-    
-    clearInterval(timerInterval);
-    const timerDisplay = document.getElementById("speedrun-timer");
-    if (timerDisplay) {
-        timerDisplay.innerText = "0.00s";
+    if (meterLabel) meterLabel.innerText = "CORE OVERLOAD";
+    if (diagDef) {
+        diagDef.innerText = "MUTATING";
+        diagDef.style.color = "var(--neon-cyan)";
+    }
+    if (gaugeCircle) {
+        gaugeCircle.classList.remove("cooling-mode");
+    }
+
+    renderRadialClock(currentPhaseSecondsLeft, "SEC REMAIN", 0);
+
+    // 1. Attack Timer: runs automatic strikes every 2-3 seconds
+    attackTimerInterval = setInterval(() => {
+        if (!isCoolingDown && !isMutating) {
+            triggerSabotageEvent();
+        }
+    }, conf.strikeCadenceMs);
+
+    // 2. Phase Countdown Loop: updates the clock and fills the gauge like sand
+    masterLoopInterval = setInterval(() => {
+        currentPhaseSecondsLeft--;
+
+        // Ratio fills from 0.0 to 1.0
+        const progressRatio = (phaseTotalSeconds - currentPhaseSecondsLeft) / phaseTotalSeconds;
+        renderRadialClock(currentPhaseSecondsLeft, "SEC ATTACK", progressRatio);
+
+        if (currentPhaseSecondsLeft <= 0) {
+            startCooldownPhase();
+        }
+    }, 1000);
+}
+
+function startCooldownPhase() {
+    isCoolingDown = true;
+    clearInterval(masterLoopInterval);
+    clearInterval(attackTimerInterval);
+
+    const conf = DIFFICULTY_CONFIG[activeLevel];
+    phaseTotalSeconds = conf.cooldownSec;
+    currentPhaseSecondsLeft = conf.cooldownSec;
+
+    // UI Updates
+    const badge = document.getElementById('game-status');
+    const statusText = document.getElementById('threat-status-text');
+    const meterLabel = document.getElementById('meter-label');
+    const diagDef = document.getElementById('diag-def-val');
+    const gaugeCircle = document.getElementById('gauge-circle-fill');
+
+    if (badge) {
+        badge.className = "threat-pill cooling";
+        if (statusText) statusText.innerText = "❄ SAFE COOLDOWN";
+    }
+    if (meterLabel) meterLabel.innerText = "COOLING DURATION";
+    if (diagDef) {
+        diagDef.innerText = "SAFE WINDOW";
+        diagDef.style.color = "var(--neon-green)";
+    }
+    if (gaugeCircle) {
+        gaugeCircle.classList.add("cooling-mode");
+    }
+
+    renderRadialClock(currentPhaseSecondsLeft, "SEC SAFE", 1);
+
+    // Cooldown loop: meter smoothly drains back from 1.0 down to 0.0
+    masterLoopInterval = setInterval(() => {
+        currentPhaseSecondsLeft--;
+
+        const drainRatio = Math.max(0, currentPhaseSecondsLeft / phaseTotalSeconds);
+        renderRadialClock(currentPhaseSecondsLeft, "SEC SAFE", drainRatio);
+
+        if (currentPhaseSecondsLeft <= 0) {
+            startAttackPhase();
+        }
+    }, 1000);
+}
+
+function renderRadialClock(displayVal, unitText, ratio) {
+    const circle = document.getElementById('gauge-circle-fill');
+    const valText = document.getElementById('meter-digital-val');
+    const unitEl = document.getElementById('meter-digital-unit');
+
+    if (valText) valText.innerText = displayVal;
+    if (unitEl) unitEl.innerText = unitText;
+
+    if (circle) {
+        const clampedRatio = Math.max(0, Math.min(1, ratio));
+        // Offset starts at 471.24 (empty) and moves to 0 (full)
+        const offset = CIRCUMFERENCE - (clampedRatio * CIRCUMFERENCE);
+        circle.style.strokeDashoffset = offset;
     }
 }
 
@@ -130,49 +172,73 @@ function setupMonaco() {
             theme: 'vs-dark',
             automaticLayout: true,
             fontSize: 14,
+            fontFamily: "'Fira Code', Consolas, monospace",
+            tabSize: 4,
+            insertSpaces: true,
+            detectIndentation: false,
+            bracketPairColorization: { enabled: true },
             minimap: { enabled: false }
         });
 
         loadChallengeUI(currentCh);
         applyDifficulty(document.getElementById("difficulty-select").value);
 
-        window.editor.onKeyUp((e) => {
-            if (e.keyCode === monaco.KeyCode.Enter && isEvilMode && !isMutating) {
-                setTimeout(() => triggerSabotageEvent(), 80);
+        setTimeout(() => {
+            if (window.editor) {
+                window.editor.layout();
+                window.editor.focus();
             }
+        }, 150);
+
+        window.addEventListener("resize", () => {
+            if (window.editor) window.editor.layout();
         });
 
-        window.editor.onDidChangeModelContent((event) => {
-            if (event.isFlush || isMutating) return;
+        document.getElementById("difficulty-select").addEventListener("change", (e) => {
+            applyDifficulty(e.target.value);
+        });
 
-            // Trigger on very first keystroke
-            if (!hasStartedTyping) {
-                hasStartedTyping = true;
-                startSpeedrunTimer();
-                startPhaseLoop(); // Kick off the chaos loop!
-            }
-
-            // ONLY trigger sabotage if we are actively in Evil Mode
-            if (isEvilMode) {
-                const conf = DIFFICULTY_CONFIG[activeLevel];
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    triggerSabotageEvent();
-                }, conf.debounceMs);
+        // Instant attack trigger on Enter key press
+        window.editor.onKeyUp((e) => {
+            if (e.keyCode === monaco.KeyCode.Enter && !isCoolingDown && !isMutating) {
+                setTimeout(() => triggerSabotageEvent(), 80);
             }
         });
 
         document.getElementById("next-challenge-btn").addEventListener("click", () => {
             const nextCh = nextChallenge();
             loadChallengeUI(nextCh);
-            if (isRandomDifficulty) applyDifficulty("random");
+            if (isRandomDifficulty) {
+                applyDifficulty("random");
+            } else {
+                startAttackPhase();
+            }
+        });
+
+        document.getElementById("clear-btn").addEventListener("click", () => {
+            const out = document.getElementById("console-output");
+            if (out) out.innerText = "";
         });
     });
 }
 
+function loadChallengeUI(challenge) {
+    const titleEl = document.getElementById("challenge-title");
+    const descEl = document.getElementById("challenge-desc");
+    const catEl = document.getElementById("challenge-cat");
+
+    if (titleEl) titleEl.innerText = challenge.title;
+    if (descEl) descEl.innerText = challenge.desc;
+    if (catEl) catEl.innerText = challenge.category || "MISSION DIRECTIVE";
+
+    if (window.editor) {
+        window.editor.setValue(challenge.starterCode);
+        setTimeout(() => window.editor.layout(), 50);
+    }
+}
+
 async function triggerSabotageEvent() {
-    // FIX: Using !isEvilMode instead of the deleted isCoolingDown variable
-    if (isMutating || !isEvilMode || !window.editor) return;
+    if (isMutating || isCoolingDown || !window.editor) return;
 
     const model = window.editor.getModel();
     if (!model) return;
@@ -182,6 +248,7 @@ async function triggerSabotageEvent() {
 
     for (let i = 1; i <= totalLines; i++) {
         const text = model.getLineContent(i).trim();
+        // Target code lines that aren't pure comments or empty
         if (text.length >= 3 && !text.startsWith("#")) {
             candidateLines.push(i);
         }
@@ -205,16 +272,21 @@ async function triggerSabotageEvent() {
                 }
             ]);
 
+            // Flash neon red laser pulse along corrupted line only
             activeDecorations = window.editor.deltaDecorations(activeDecorations, [
                 {
                     range: new monaco.Range(targetLineNumber, 1, targetLineNumber, mutatedText.length + 1),
-                    options: { isWholeLine: true, className: "corrupted-line-highlight" }
+                    options: { 
+                        isWholeLine: true, 
+                        className: "corrupted-line-highlight",
+                        glyphMarginClassName: "corrupted-line-glyph"
+                    }
                 }
             ]);
 
             setTimeout(() => {
                 activeDecorations = window.editor.deltaDecorations(activeDecorations, []);
-            }, 550);
+            }, 450);
         }
     } finally {
         isMutating = false;
