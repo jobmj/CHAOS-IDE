@@ -3,42 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaslight IDE</title>
+    <title>De-Copilot: Chaos Survival</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
 </head>
 <body>
-    <div class="header">
-        <h1>Gaslight IDE</h1>
-        <button id="run-btn" class="run-button">▶ RUN CODE</button>
-    </div>
+    <div class="ide-container">
+        <!-- Game Toolbar -->
+        <header class="toolbar">
+            <div class="logo-group">
+                <span class="logo-title">⚡ Chaos IDE</span>
+                <!-- We will update this badge dynamically -->
+                <span id="game-status" class="badge hunting">🔥 AWAITING INPUT</span> 
+                <span id="diff-display" class="badge diff-badge">LVL 3</span>
+            </div>
 
-    <div class="main-container">
-        <!-- Fake File Explorer -->
-        <div class="sidebar">
-            <!-- Inside <div class="sidebar"> -->
-            <h3>EXPLORER</h3>
-            <ul id="file-tree">
-                <li class="file-item active-file" data-file="index.js">📄 index.js</li>
-                <li class="file-item" data-file="style.css">📄 style.css</li>
-                <li class="file-item" data-file="utils.js">📄 utils.js</li>
-                <li class="file-item" data-file="node_modules">📁 node_modules (fake)</li>
-            </ul>
+            <div class="difficulty-control">
+                <label for="difficulty-select">Difficulty:</label>
+                <select id="difficulty-select">
+                    <option value="1">1 - Mild Annoyance</option>
+                    <option value="2">2 - Script Kiddie</option>
+                    <option value="3" selected>3 - Chaos Gremlin</option>
+                    <option value="4">4 - Code Demon</option>
+                    <option value="5">5 - APOCALYPSE</option>
+                    <option value="random">🎲 Random</option>
+                </select>
+            </div>
+
+            <div class="game-actions">
+                <div id="speedrun-timer" style="color: #4fc3f7; font-family: monospace; font-size: 16px; font-weight: bold; padding: 4px 12px;">0.00s</div>
+                <button id="next-challenge-btn" class="btn secondary">Next Challenge</button>
+                <button id="run-btn" class="btn run">▶ Submit & Test</button>
+            </div>
+        </header>
+
+        <!-- Objective Banner -->
+        <div class="objective-banner">
+            <div id="challenge-title" class="challenge-title">Challenge: Two Sum</div>
+            <div id="challenge-desc" class="challenge-desc">Return the indices of the two numbers such that they add up to target.</div>
         </div>
 
-        <!-- Monaco Editor Container -->
-        <div id="editor-container"></div>
+        <!-- Editor & Output Workspace -->
+        <div class="workspace">
+            <div id="editor-container" class="editor-pane"></div>
+
+            <div class="terminal-pane">
+                <div class="terminal-header">
+                    <span>Test Suite & Output</span>
+                    <button id="clear-btn" class="btn-clear" onclick="document.getElementById('console-output').innerText = ''">Clear</button>
+                </div>
+                <pre id="console-output" class="terminal-output"></pre>
+            </div>
+        </div>
     </div>
 
-    <!-- Fake Terminal -->
-    <div class="terminal-container">
-        <div class="terminal-header">TERMINAL</div>
-        <div id="console-output"></div>
-    </div>
-
-    <!-- Monaco Editor CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
-    <script src="js/editor.js"></script>
+    <script src="js/challenges.js"></script>
     <script src="js/llm.js"></script>
+    <script src="js/editor.js"></script>
     <script src="js/gaslight.js"></script>
 </body>
 </html>
