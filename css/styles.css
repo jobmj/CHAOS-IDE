@@ -1,0 +1,113 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #1e1e1e;
+    color: #cccccc;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.header {
+    background-color: #333333;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #444;
+}
+
+.header h1 {
+    font-size: 16px;
+    font-weight: normal;
+    color: #9cdcfe;
+}
+
+.run-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.run-button:hover {
+    background-color: #45a049;
+}
+
+.main-container {
+    display: flex;
+    flex-grow: 1;
+    height: calc(100vh - 250px); /* Leaves room for header and terminal */
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #252526;
+    border-right: 1px solid #444;
+    padding: 10px;
+}
+
+.sidebar h3 {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #bbbbbb;
+    margin-bottom: 10px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar li {
+    font-size: 13px;
+    padding: 4px 0;
+    cursor: pointer;
+}
+
+.active-file {
+    color: #ffffff;
+    background-color: #37373d;
+    padding-left: 5px;
+}
+
+#editor-container {
+    flex-grow: 1;
+    height: 100%;
+}
+
+.terminal-container {
+    height: 200px;
+    background-color: #1e1e1e;
+    border-top: 1px solid #444;
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal-header {
+    background-color: #2d2d2d;
+    padding: 5px 20px;
+    font-size: 12px;
+    color: #e7e7e7;
+    text-transform: uppercase;
+}
+
+#console-output {
+    flex-grow: 1;
+    background-color: #000000;
+    color: #d4d4d4;
+    font-family: 'Courier New', Courier, monospace;
+    padding: 10px 20px;
+    font-size: 13px;
+    overflow-y: auto;
+}
