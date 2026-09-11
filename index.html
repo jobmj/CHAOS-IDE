@@ -3,29 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>De-Copilot IDE (Auto-Corrector)</title>
+    <title>De-Copilot: Chaos Survival</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
 </head>
 <body>
     <div class="ide-container">
-        <!-- Top Navigation -->
+        <!-- Game Toolbar -->
         <header class="toolbar">
-            <div class="logo">
-                De-Copilot <span class="badge">Evil Auto-Correct</span>
+            <div class="logo-group">
+                <span class="logo-title">⚡ Chaos IDE</span>
+                <span id="game-status" class="badge hunting">🔥 ATTACK PHASE</span>
+                <span id="diff-display" class="badge diff-badge">LVL 3</span>
             </div>
-            <div class="actions">
-                <button id="run-btn" class="btn run">▶ Run</button>
+
+            <!-- Difficulty Selector -->
+            <div class="difficulty-control">
+                <label for="difficulty-select">Difficulty:</label>
+                <select id="difficulty-select">
+                    <option value="1">1 - Mild Annoyance</option>
+                    <option value="2">2 - Script Kiddie</option>
+                    <option value="3" selected>3 - Chaos Gremlin</option>
+                    <option value="4">4 - Code Demon</option>
+                    <option value="5">5 - APOCALYPSE</option>
+                    <option value="random">🎲 Random</option>
+                </select>
+            </div>
+
+            <!-- Heat / Meltdown Gauge -->
+            <div class="mood-meter-wrapper">
+                <div class="meter-labels">
+                    <span id="meter-state-label" class="label-state">Agent Heat:</span>
+                    <span id="meter-score-text" class="meter-val">0%</span>
+                </div>
+                <div class="meter-track">
+                    <div id="meter-fill" class="meter-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="game-actions">
+                <button id="next-challenge-btn" class="btn secondary">Next Challenge</button>
+                <button id="run-btn" class="btn run">▶ Submit & Test</button>
             </div>
         </header>
 
-        <!-- Main Workspace -->
+        <!-- Objective Banner -->
+        <div class="objective-banner">
+            <div id="challenge-title" class="challenge-title">Challenge: Two Sum</div>
+            <div id="challenge-desc" class="challenge-desc">Return the indices of the two numbers such that they add up to target.</div>
+        </div>
+
+        <!-- Editor & Output Workspace -->
         <div class="workspace">
             <div id="editor-container" class="editor-pane"></div>
 
             <div class="terminal-pane">
                 <div class="terminal-header">
-                    <span>Terminal</span>
+                    <span>Test Suite & Output</span>
                     <button id="clear-btn" class="btn-clear" onclick="document.getElementById('console-output').innerText = ''">Clear</button>
                 </div>
                 <pre id="console-output" class="terminal-output"></pre>
@@ -33,6 +67,7 @@
         </div>
     </div>
 
+    <script src="js/challenges.js"></script>
     <script src="js/llm.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/gaslight.js"></script>

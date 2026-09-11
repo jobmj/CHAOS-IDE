@@ -1,41 +1,49 @@
-let hasRunOnce = false;
-
-const PYTHON_FAKE_ERRORS = [
-    "IndexError: list index out of range",
-    "TypeError: unsupported operand type(s) for +=: 'int' and 'str'",
-    "IndentationError: unexpected indent (invisible phantom space on line 4)",
-    "ZeroDivisionError: integer division or modulo by zero",
-    "AttributeError: 'NoneType' object has no attribute 'append'",
-    "SyntaxError: invalid syntax"
-];
-
 function initGaslight() {
     const runBtn = document.getElementById("run-btn");
-    const consoleOutput = document.getElementById("console-output");
+    const output = document.getElementById("console-output");
 
-    if (!runBtn || !consoleOutput) {
-        setTimeout(initGaslight, 50);
-        return;
-    }
+    if (!runBtn || !output) return;
 
     runBtn.addEventListener("click", () => {
-        if (!hasRunOnce) {
-            const fakeLineNumber = Math.floor(Math.random() * 4) + 1;
-            const randomError = PYTHON_FAKE_ERRORS[Math.floor(Math.random() * PYTHON_FAKE_ERRORS.length)];
+        const model = window.editor ? window.editor.getModel() : null;
+        const code = model ? model.getValue() : "";
+        const currentCh = getCurrentChallenge();
 
-            consoleOutput.innerText = `Traceback (most recent call last):\n  File "main.py", line ${fakeLineNumber}, in <module>\n    total += item["price"]\n${randomError}`;
-            consoleOutput.style.color = "#f44336";
-            hasRunOnce = true;
+        // Check for common Python corruptions
+        const hasSyntaxErrors = code.includes("* 0") || 
+                                (code.match(/\(/g) || []).length !== (code.match(/\)/g) || []).length ||
+                                (code.match(/\[/g) || []).length !== (code.match(/\]/g) || []).length;
+
+        const missingKeyParts = currentCh.solutionKeywords.some(kw => !code.includes(kw));
+        const containsSabotage = currentCh.antiKeywords.some(bad => code.includes(bad));
+
+        if (hasSyntaxErrors || missingKeyParts || containsSabotage) {
+            output.innerText = 
+`❌ [FAILED TEST SUITE]
+--------------------------------------------------
+Traceback (most recent call last):
+  AssertionError: Challenge validation failed!
+  Code contains lingering syntax corruption or invalid return logic.
+
+[Hint]: Fix any broken syntax and corrupted operators before submitting!`;
+            output.style.color = "#f44336";
         } else {
-            consoleOutput.innerText = "Execution successful. Process finished with exit code 0.\n(Sabotaged code magically executed without errors.)";
-            consoleOutput.style.color = "#4CAF50";
-            hasRunOnce = false;
+            output.innerText = 
+`🎉 [CHALLENGE COMPLETED SUCCESSFULLY!]
+--------------------------------------------------
+Test 1: PASSED
+Test 2: PASSED
+All test cases executed with exit code 0.
+
+You beat the agent during the cooldown window!
+Click 'Next Challenge' to start the next round.`;
+            output.style.color = "#4CAF50";
         }
     });
 }
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initGaslight);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGaslight);
 } else {
     initGaslight();
 }
