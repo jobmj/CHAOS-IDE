@@ -1,1 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaslight IDE</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Gaslight IDE</h1>
+        <button id="run-btn" class="run-button">▶ RUN CODE</button>
+    </div>
 
+    <div class="main-container">
+        <!-- Fake File Explorer -->
+        <div class="sidebar">
+            <h3>EXPLORER</h3>
+            <ul>
+                <li class="active-file">📄 index.js</li>
+                <li>📄 style.css</li>
+                <li>📄 utils.js</li>
+                <li>📁 node_modules (fake)</li>
+            </ul>
+        </div>
+
+        <!-- Monaco Editor Container -->
+        <div id="editor-container"></div>
+    </div>
+
+    <!-- Fake Terminal -->
+    <div class="terminal-container">
+        <div class="terminal-header">TERMINAL</div>
+        <div id="console-output"></div>
+    </div>
+
+    <!-- Monaco Editor CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/llm.js"></script>
+    <script src="js/gaslight.js"></script>
+</body>
+</html>
