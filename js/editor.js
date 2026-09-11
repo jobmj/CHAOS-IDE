@@ -1,10 +1,6 @@
-const initialPythonCode = `def calculate_total(cart):
-    total = 0
-    for item in cart:
-        total += item["price"]
-    return total
-
-print(calculate_total([{"price": 10}, {"price": 20}]))`;
+let isReplacing = false;
+let processedLines = new Set();
+let decorations = [];
 
 function setupMonaco() {
     if (typeof require === "undefined" || !require.config) {
@@ -19,16 +15,12 @@ function setupMonaco() {
         if (!container) return;
 
         window.editor = monaco.editor.create(container, {
-            value: initialPythonCode,
+            value: "",
             language: 'python',
             theme: 'vs-dark',
             automaticLayout: true,
             fontSize: 14,
-            minimap: { enabled: false },
-            inlineSuggest: {
-                enabled: true,
-                mode: 'always'
-            }
+            minimap: { enabled: false }
         });
 
         setTimeout(() => {
@@ -36,69 +28,88 @@ function setupMonaco() {
                 window.editor.layout();
                 window.editor.focus();
             }
-        }, 100);
+        }, 150);
 
-        // Inline Ghost Text Provider anchored strictly to cursor position
-        monaco.languages.registerInlineCompletionsProvider('python', {
-            provideInlineCompletions: async (model, position, context, token) => {
-                const codeUntilCursor = model.getValueInRange({
-                    startLineNumber: 1,
-                    startColumn: 1,
-                    endLineNumber: position.lineNumber,
-                    endColumn: position.column
-                });
+        // Intercept Enter key: run auto-correct on the line just completed
+        window.editor.onKeyDown(async (e) => {
+            // KeyCode 3 is Enter
+            if (e.keyCode === monaco.KeyCode.Enter) {
+                const model = window.editor.getModel();
+                const position = window.editor.getPosition();
+                const currentLineNumber = position.lineNumber;
+                const lineContent = model.getLineContent(currentLineNumber);
 
-                const currentLineText = model.getLineContent(position.lineNumber);
+                // Ignore empty or whitespace-only lines
+                if (!lineContent.trim() || lineContent.trim().length < 3) return;
 
-                if (!codeUntilCursor.trim()) {
-                    return { items: [] };
+                // Fire async corruption without blocking the Enter keystroke
+                setTimeout(async () => {
+                    await handleLineCorruption(currentLineNumber, lineContent);
+                }, 100);
+            }
+        });
+
+        // Also check if the user moved away from a line without pressing Enter
+        let lastLineNumber = 1;
+        window.editor.onDidChangeCursorPosition((e) => {
+            const currentLineNumber = e.position.lineNumber;
+            if (currentLineNumber !== lastLineNumber) {
+                const model = window.editor.getModel();
+                const prevContent = model.getLineContent(lastLineNumber);
+                if (prevContent.trim() && !processedLines.has(`${lastLineNumber}:${prevContent}`)) {
+                    const lineToCheck = lastLineNumber;
+                    setTimeout(async () => {
+                        await handleLineCorruption(lineToCheck, prevContent);
+                    }, 150);
                 }
-
-                const abortController = new AbortController();
-                token.onCancellationRequested(() => abortController.abort());
-
-                // Pass current line text to prevent duplicate prefix echo
-                let suggestion = await getEvilSuggestion(codeUntilCursor, currentLineText, abortController.signal);
-
-                if (!suggestion || token.isCancellationRequested) {
-                    return { items: [] };
-                }
-
-                // If cursor is at the end of a line with text, ensure proper spacing
-                if (currentLineText.trim().length > 0 && !suggestion.startsWith(' ') && !suggestion.startsWith('\n')) {
-                    // Check if current line ends with a colon (needs newline + indent)
-                    if (currentLineText.trim().endsWith(':')) {
-                        const baseIndent = currentLineText.match(/^\s*/)[0];
-                        suggestion = `\n${baseIndent}    ${suggestion.trim()}`;
-                    } else {
-                        suggestion = ` ${suggestion.trim()}`;
-                    }
-                }
-
-                // Log to terminal
-                const consoleOutput = document.getElementById("console-output");
-                if (consoleOutput) {
-                    consoleOutput.innerHTML += `\n<span style="color: #64b5f6;">[De-Copilot Ghost]: ${suggestion.trim()}</span>`;
-                    consoleOutput.scrollTop = consoleOutput.scrollHeight;
-                }
-
-                return {
-                    items: [
-                        {
-                            insertText: suggestion,
-                            range: new monaco.Range(
-                                position.lineNumber,
-                                position.column,
-                                position.lineNumber,
-                                position.column
-                            )
-                        }
-                    ]
-                };
-            },
-            freeInlineCompletions: () => {}
+                lastLineNumber = currentLineNumber;
+            }
         });
     });
+}
+
+/**
+ * Executes the line corruption and performs in-place edit in Monaco
+ */
+async function handleLineCorruption(lineNumber, originalText) {
+    if (isReplacing) return;
+    const cacheKey = `${lineNumber}:${originalText.trim()}`;
+    if (processedLines.has(cacheKey)) return;
+
+    const corrupted = await corruptPreviousLine(originalText);
+    if (!corrupted || corrupted === originalText) return;
+
+    const model = window.editor.getModel();
+    if (!model) return;
+
+    // Check if the target line still has the expected text
+    const currentTextOnLine = model.getLineContent(lineNumber);
+    if (currentTextOnLine.trim() !== originalText.trim()) return;
+
+    isReplacing = true;
+    processedLines.add(`${lineNumber}:${corrupted.trim()}`);
+
+    // Apply the replacement directly to the model
+    model.applyEdits([
+        {
+            range: new monaco.Range(lineNumber, 1, lineNumber, currentTextOnLine.length + 1),
+            text: corrupted
+        }
+    ]);
+
+    // Briefly flash the line to show the sabotage occurred
+    decorations = window.editor.deltaDecorations(decorations, [
+        {
+            range: new monaco.Range(lineNumber, 1, lineNumber, corrupted.length + 1),
+            options: { isWholeLine: true, className: 'corrupted-line-highlight' }
+        }
+    ]);
+
+    setTimeout(() => {
+        decorations = window.editor.deltaDecorations(decorations, []);
+    }, 600);
+
+    isReplacing = false;
 }
 
 if (document.readyState === 'loading') {

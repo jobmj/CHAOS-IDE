@@ -3,48 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gaslight IDE</title>
-    <!-- Verify whether your file is style.css or styles.css -->
+    <title>De-Copilot IDE (Auto-Corrector)</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
 </head>
 <body>
-    <div class="header">
-        <h1>Gaslight IDE</h1>
-        <button id="run-btn" class="run-button">▶ RUN CODE</button>
-    </div>
+    <div class="ide-container">
+        <!-- Top Navigation -->
+        <header class="toolbar">
+            <div class="logo">
+                De-Copilot <span class="badge">Evil Auto-Correct</span>
+            </div>
+            <div class="actions">
+                <button id="run-btn" class="btn run">▶ Run</button>
+            </div>
+        </header>
 
-    <div class="main-container">
-        <!-- Fake File Explorer -->
-        <div class="sidebar">
-            <h3>EXPLORER</h3>
-            <ul>
-                <li class="active-file">🐍 main.py</li>
-                <li>🐍 utils.py</li>
-                <li>📄 requirements.txt</li>
-                <li>📁 __pycache__</li>
-            </ul>
+        <!-- Main Workspace -->
+        <div class="workspace">
+            <div id="editor-container" class="editor-pane"></div>
+
+            <div class="terminal-pane">
+                <div class="terminal-header">
+                    <span>Terminal</span>
+                    <button id="clear-btn" class="btn-clear" onclick="document.getElementById('console-output').innerText = ''">Clear</button>
+                </div>
+                <pre id="console-output" class="terminal-output"></pre>
+            </div>
         </div>
-
-        <!-- Monaco Editor Container -->
-        <div id="editor-container"></div>
     </div>
 
-    <!-- Fake Terminal -->
-    <div class="terminal-container">
-        <div class="terminal-header">TERMINAL</div>
-        <div id="console-output"></div>
-    </div>
-
-    <!-- 1. Monaco AMD Loader CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
-    
-    <!-- 2. LLM engine first, so getEvilSuggestion is defined -->
     <script src="js/llm.js"></script>
-    
-    <!-- 3. Editor mounts Monaco and attaches autocomplete provider -->
     <script src="js/editor.js"></script>
-    
-    <!-- 4. Gaslight handles fake run toggles -->
     <script src="js/gaslight.js"></script>
 </body>
 </html>
