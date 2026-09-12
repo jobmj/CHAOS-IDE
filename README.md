@@ -32,31 +32,31 @@ For Software:
 
 ### Implementation
 For Software:
-# Prerequisite (Local AI Server Setup)
-# 1. Install Ollama from https://ollama.com
-# 2. Pull the quantized coding model
+### Prerequisite (Local AI Server Setup)
+### 1. Install Ollama from https://ollama.com
+### 2. Pull the quantized coding model
 ollama pull qwen2.5-coder:7b
 
-# 3. Start the local server with CORS enabled (Crucial for browser access)
-# For macOS / Linux:
+### 3. Start the local server with CORS enabled (Crucial for browser access)
+### For macOS / Linux:
 OLLAMA_ORIGINS="*" ollama serve
 
-# For Windows (Command Prompt):
+### For Windows (Command Prompt):
 set OLLAMA_ORIGINS="*" && ollama serve
 
 ---
 # Installation
-# 1. Clone the repository
+### 1. Clone the repository
 git clone https://github.com/jobmj/useless_project.git
 
-# 2. Navigate to the project directory
+### 2. Navigate to the project directory
 cd chaos-ide
-# Run
-# Option 1: Open index.html directly in any modern browser
+## Run
+### Option 1: Open index.html directly in any modern browser
 double-click index.html
 
-# Option 2: Launch with VS Code Live Server extension
-# Click 'Go Live' from the status bar in VS Code
+### Option 2: Launch with VS Code Live Server extension
+### Click 'Go Live' from the status bar in VS Code
 
 ### Project Documentation
 For Software:
