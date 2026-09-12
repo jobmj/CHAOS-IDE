@@ -100,7 +100,7 @@
             padding: 32px 36px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 18px;
             position: relative;
             overflow: hidden;
         }
@@ -166,7 +166,7 @@
         .difficulty-stage {
             display: none;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
             animation: fadeIn 0.4s ease-out forwards;
         }
 
@@ -174,27 +174,53 @@
             display: flex;
         }
 
-        .launch-instruction {
+        /* Player Name Input Field */
+        .player-input-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .player-name-field {
+            background: #04060e;
+            border: 1px solid #1f2b4d;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: var(--font-mono);
             font-size: 13px;
-            color: #9cb2db;
-            text-align: center;
-            line-height: 1.4;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .player-name-field:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
         }
 
         .difficulty-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            gap: 8px;
         }
 
         .diff-card-btn {
             background: #0c1122;
             border: 1px solid #1b2545;
             border-radius: 6px;
-            padding: 12px 14px;
+            padding: 10px 12px;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
             cursor: pointer;
             transition: all 0.2s ease;
             text-align: left;
@@ -203,7 +229,6 @@
         .diff-card-btn:hover {
             border-color: var(--neon-cyan);
             box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
-            transform: translateY(-2px);
         }
 
         .diff-card-btn.active {
@@ -214,7 +239,7 @@
 
         .diff-card-name {
             font-family: var(--font-display);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             color: #ffffff;
             letter-spacing: 0.5px;
@@ -222,7 +247,7 @@
 
         .diff-card-desc {
             font-family: var(--font-mono);
-            font-size: 10px;
+            font-size: 9px;
             color: #6d80a6;
         }
 
@@ -379,21 +404,21 @@
             transform: scale(1.02);
         }
 
-        /* 3-Column Split Viewport with Turn-On Animation */
-        @keyframes crtTurnOn {
-            0% { transform: scaleY(0.005) scaleX(0.8); opacity: 0; filter: brightness(3); }
-            50% { transform: scaleY(1) scaleX(0.98); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
-        }
-
+        /* 3-Column Split Viewport */
         .workspace-viewport {
             display: grid;
-            grid-template-columns: 460px 1fr 290px;
+            grid-template-columns: 460px 1fr 310px;
             flex: 1;
             min-height: 0;
             padding: 12px 16px;
             gap: 14px;
             animation: crtTurnOn 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        @keyframes crtTurnOn {
+            0% { transform: scaleY(0.005) scaleX(0.8); opacity: 0; filter: brightness(3); }
+            50% { transform: scaleY(1) scaleX(0.98); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
         }
 
         /* Column 1: HackerRank Problem Spec */
@@ -557,10 +582,8 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 8px 30px rgba(0,0,0,0.7);
-            transition: transform 0.05s ease;
         }
 
-        /* Micro-glitch shockwave on sabotage */
         @keyframes glitchJitter {
             0% { transform: translate(0, 0); }
             20% { transform: translate(-3px, 1px); }
@@ -664,7 +687,7 @@
             word-break: break-all;
         }
 
-        /* Column 3: Radar Telemetry - CLEAN VECTOR GRADIENT, NO BLUR/GLOW */
+        /* Column 3: Radar Telemetry + Leaderboard Deck */
         .sidebar-telemetry {
             background: var(--bg-glass);
             backdrop-filter: blur(14px);
@@ -672,9 +695,10 @@
             border-radius: 8px;
             display: flex;
             flex-direction: column;
-            padding: 18px;
-            gap: 18px;
+            padding: 14px;
+            gap: 12px;
             flex-shrink: 0;
+            overflow-y: auto;
             box-shadow: 0 8px 30px rgba(0,0,0,0.7);
         }
 
@@ -682,24 +706,24 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 14px;
-            padding-bottom: 18px;
+            gap: 8px;
+            padding-bottom: 12px;
             border-bottom: 1px solid rgba(26, 35, 61, 0.8);
         }
 
         .radar-title {
             font-family: var(--font-display);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
             color: var(--neon-cyan);
             text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
         }
 
         .circular-gauge-container {
             position: relative;
-            width: 170px;
-            height: 170px;
+            width: 140px;
+            height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -707,19 +731,19 @@
 
         .gauge-svg {
             transform: rotate(-90deg);
-            width: 170px;
-            height: 170px;
+            width: 140px;
+            height: 140px;
         }
 
         .gauge-track {
             fill: none;
             stroke: #0c1022;
-            stroke-width: 12;
+            stroke-width: 10;
         }
 
         .gauge-fill {
             fill: none;
-            stroke-width: 12;
+            stroke-width: 10;
             stroke-linecap: round;
             stroke-dasharray: 471.24;
             stroke-dashoffset: 471.24;
@@ -748,10 +772,10 @@
 
         .gauge-value {
             font-family: var(--font-display);
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 900;
             color: #ffffff;
-            transition: all 0.2s ease;
+            text-shadow: 0 0 14px rgba(255,255,255,0.6);
         }
 
         @keyframes urgencyPulse {
@@ -765,7 +789,7 @@
 
         .gauge-unit {
             font-family: var(--font-mono);
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
             letter-spacing: 1px;
             color: #5c6c94;
@@ -774,14 +798,14 @@
         .diag-readout-grid {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .diag-item {
             background: #060914;
             border: 1px solid #13192d;
             border-radius: 6px;
-            padding: 10px 12px;
+            padding: 8px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -789,7 +813,7 @@
 
         .diag-meta {
             font-family: var(--font-display);
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: 700;
             color: #5d6f99;
             letter-spacing: 1px;
@@ -797,13 +821,96 @@
 
         .diag-val {
             font-family: var(--font-mono);
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             color: var(--neon-cyan);
             text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
         }
 
-        /* Targeted Neon Red Spike Highlight */
+        /* Leaderboard Deck in the Bottom Empty Space */
+        .leaderboard-card {
+            background: #04060f;
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #141b31;
+            padding-bottom: 6px;
+        }
+
+        .leaderboard-title {
+            font-family: var(--font-display);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--neon-amber);
+            text-transform: uppercase;
+        }
+
+        .live-score-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--neon-green);
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #080b18;
+            border: 1px solid #141b31;
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+        }
+
+        .lb-row.active-user {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 240, 255, 0.08);
+        }
+
+        .lb-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .lb-rank {
+            color: #5d6f99;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        .lb-name {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .lb-score {
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }
+
+        /* Targeted Laser Spike */
         @keyframes neonLineSpike {
             0% {
                 background-color: rgba(255, 0, 60, 0.85);
@@ -833,7 +940,7 @@
     </style>
 </head>
 <body>
-    <!-- 1. STAGED LAUNCH OVERLAY (BOOT SEQUENCE -> DIFFICULTY SELECT) -->
+    <!-- 1. STAGED LAUNCH OVERLAY WITH PLAYER NAME PROMPT -->
     <div id="launch-overlay">
         <div class="launch-card">
             <div class="launch-title-box">
@@ -847,31 +954,32 @@
             </div>
 
             <div id="difficulty-stage-box" class="difficulty-stage">
-                <p class="launch-instruction">
-                    Select threat matrix profile. The IDE workspace mounts in standby mode. 
-                    <strong>The survival countdown and adversarial strikes ignite only on your first keystroke.</strong>
-                </p>
+                <!-- Player Name Prompt -->
+                <div class="player-input-wrap">
+                    <label class="input-label" for="player-name-input">> OPERATOR CODENAME:</label>
+                    <input type="text" id="player-name-input" class="player-name-field" placeholder="Enter hacker handle (e.g., Neo_01)" maxlength="16" value="Operator_01" autocomplete="off" />
+                </div>
 
                 <div class="difficulty-grid">
                     <div class="diff-card-btn" data-diff="1">
                         <span class="diff-card-name">LVL 1 · Mild Annoyance</span>
-                        <span class="diff-card-desc">Cadence 3.0s · 14s cooling window</span>
+                        <span class="diff-card-desc">Cadence 3.0s · 1.0x PTS</span>
                     </div>
                     <div class="diff-card-btn" data-diff="2">
                         <span class="diff-card-name">LVL 2 · Script Kiddie</span>
-                        <span class="diff-card-desc">Cadence 2.6s · 12s cooling window</span>
+                        <span class="diff-card-desc">Cadence 2.6s · 1.2x PTS</span>
                     </div>
                     <div class="diff-card-btn active" data-diff="3">
                         <span class="diff-card-name">LVL 3 · Chaos Gremlin</span>
-                        <span class="diff-card-desc">Cadence 2.2s · 10s cooling window</span>
+                        <span class="diff-card-desc">Cadence 2.2s · 1.5x PTS</span>
                     </div>
                     <div class="diff-card-btn" data-diff="4">
                         <span class="diff-card-name">LVL 4 · Code Demon</span>
-                        <span class="diff-card-desc">Cadence 2.0s · 8s cooling window</span>
+                        <span class="diff-card-desc">Cadence 2.0s · 2.0x PTS</span>
                     </div>
                     <div class="diff-card-btn random-span" data-diff="random">
                         <span class="diff-card-name">🎲 RANDOM SHUFFLE</span>
-                        <span class="diff-card-desc">Assign random threat tier on launch</span>
+                        <span class="diff-card-desc">Random threat matrix & score scaling</span>
                     </div>
                 </div>
 
@@ -880,7 +988,7 @@
         </div>
     </div>
 
-    <!-- 2. MAIN APPLICATION WORKSPACE -->
+    <!-- 2. MAIN APPLICATION -->
     <div class="master-app">
         <header class="neon-toolbar">
             <div class="brand-core">
@@ -898,7 +1006,7 @@
         </header>
 
         <main class="workspace-viewport">
-            <!-- Left: HackerRank Problem Spec -->
+            <!-- Left: HackerRank Problem Specification -->
             <section class="problem-spec-panel">
                 <div class="spec-header">
                     <div class="spec-meta-row">
@@ -911,7 +1019,7 @@
                 <div class="spec-scrollable-body" id="spec-body"></div>
             </section>
 
-            <!-- Center: Editor & Terminal -->
+            <!-- Center: Monaco Editor + Terminal Output -->
             <section class="workspace-center">
                 <div class="editor-enclosure">
                     <div class="editor-top-banner">
@@ -935,7 +1043,7 @@
                 </div>
             </section>
 
-            <!-- Right: Vector Gradient Radar -->
+            <!-- Right: Radar Telemetry Deck + Leaderboard -->
             <aside class="sidebar-telemetry">
                 <div class="radar-card">
                     <span class="radar-title" id="meter-label">CORE TEMPERATURE</span>
@@ -974,16 +1082,27 @@
 
                 <div class="diag-readout-grid">
                     <div class="diag-item">
+                        <span class="diag-meta">OPERATOR</span>
+                        <span class="diag-val" id="diag-user-val">UNKNOWN</span>
+                    </div>
+                    <div class="diag-item">
                         <span class="diag-meta">THREAT TIER</span>
                         <span class="diag-val" id="diag-lvl-val">LVL 3</span>
                     </div>
                     <div class="diag-item">
-                        <span class="diag-meta">STATUS</span>
+                        <span class="diag-meta">DEFENSE STATUS</span>
                         <span class="diag-val" id="diag-def-val">IDLE</span>
                     </div>
-                    <div class="diag-item">
-                        <span class="diag-meta">ENGINE</span>
-                        <span class="diag-val">PYODIDE WASM</span>
+                </div>
+
+                <!-- LIVE SURVIVAL LEADERBOARD -->
+                <div class="leaderboard-card">
+                    <div class="leaderboard-header">
+                        <span class="leaderboard-title">SURVIVAL LEADERBOARD</span>
+                        <span class="live-score-badge" id="hud-live-score">0 PTS</span>
+                    </div>
+                    <div class="leaderboard-list" id="leaderboard-rows">
+                        <!-- Populated dynamically via JS -->
                     </div>
                 </div>
             </aside>
@@ -991,9 +1110,9 @@
     </div>
 
     <!-- Scripts with Cache Busters -->
-    <script src="js/challenges.js?v=7"></script>
-    <script src="js/llm.js?v=7"></script>
-    <script src="js/editor.js?v=7"></script>
-    <script src="js/gaslight.js?v=7"></script>
+    <script src="js/challenges.js?v=8"></script>
+    <script src="js/llm.js?v=8"></script>
+    <script src="js/editor.js?v=8"></script>
+    <script src="js/gaslight.js?v=8"></script>
 </body>
 </html>

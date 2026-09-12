@@ -5,16 +5,21 @@ let programmaticUpdate = false;
 const CIRCUMFERENCE = 471.24;
 
 const DIFFICULTY_CONFIG = {
-    1: { name: "Mild Annoyance", attackDurationSec: 16, cooldownSec: 14, strikeCadenceMs: 3000 },
-    2: { name: "Script Kiddie",   attackDurationSec: 18, cooldownSec: 12, strikeCadenceMs: 2600 },
-    3: { name: "Chaos Gremlin",   attackDurationSec: 20, cooldownSec: 10, strikeCadenceMs: 2200 },
-    4: { name: "Code Demon",      attackDurationSec: 24, cooldownSec: 8,  strikeCadenceMs: 2000 },
-    5: { name: "APOCALYPSE",      attackDurationSec: 28, cooldownSec: 6,  strikeCadenceMs: 1600 }
+    1: { name: "Mild Annoyance", attackDurationSec: 16, cooldownSec: 14, strikeCadenceMs: 3000, scoreMult: 1.0 },
+    2: { name: "Script Kiddie",   attackDurationSec: 18, cooldownSec: 12, strikeCadenceMs: 2600, scoreMult: 1.2 },
+    3: { name: "Chaos Gremlin",   attackDurationSec: 20, cooldownSec: 10, strikeCadenceMs: 2200, scoreMult: 1.5 },
+    4: { name: "Code Demon",      attackDurationSec: 24, cooldownSec: 8,  strikeCadenceMs: 2000, scoreMult: 2.0 },
+    5: { name: "APOCALYPSE",      attackDurationSec: 28, cooldownSec: 6,  strikeCadenceMs: 1600, scoreMult: 2.5 }
 };
 
 let selectedDifficulty = "3";
 let activeLevel = 3;
 let isRandomDifficulty = false;
+
+// Player & Leaderboard State (No hardcoded competitors)
+let playerName = "Operator_01";
+let currentScore = 0;
+let scoreTickInterval = null;
 
 // Game State Machine Flags
 let isGameStarted = false;
@@ -24,9 +29,6 @@ let phaseTotalSeconds = 20;
 let masterLoopInterval = null;
 let attackTimerInterval = null;
 
-/**
- * Procedural Web Audio API sound synthesizer
- */
 class ChaosAudio {
     constructor() {
         this.ctx = null;
@@ -41,7 +43,6 @@ class ChaosAudio {
         }
     }
 
-    // High-pitched laser zap when a line corrupts
     playStrike() {
         if (!this.ctx) return;
         try {
@@ -59,7 +60,6 @@ class ChaosAudio {
         } catch (e) {}
     }
 
-    // Calm sine chime when entering Cooldown
     playCooldown() {
         if (!this.ctx) return;
         try {
@@ -81,8 +81,88 @@ class ChaosAudio {
 const sfx = new ChaosAudio();
 
 /**
- * Formats and renders HackerRank-style challenge specifications
+ * Leaderboard & Points Management (Strictly User-Only)
  */
+function getStoredLeaderboard() {
+    try {
+        const stored = localStorage.getItem("chaos_leaderboard");
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) return parsed;
+        }
+    } catch (e) {}
+    return [];
+}
+
+function saveLeaderboard(board) {
+    try {
+        localStorage.setItem("chaos_leaderboard", JSON.stringify(board));
+    } catch (e) {}
+}
+
+function updateLeaderboardUI() {
+    const listEl = document.getElementById("leaderboard-rows");
+    const liveScoreEl = document.getElementById("hud-live-score");
+
+    if (liveScoreEl) {
+        liveScoreEl.innerText = `${Math.floor(currentScore)} PTS`;
+    }
+
+    if (!listEl) return;
+
+    let board = getStoredLeaderboard();
+    
+    // Update or insert only the active player
+    const userEntry = board.find(item => item.name.toLowerCase() === playerName.toLowerCase());
+    if (userEntry) {
+        if (currentScore > userEntry.score) {
+            userEntry.score = Math.floor(currentScore);
+        }
+    } else {
+        board.push({ name: playerName, score: Math.floor(currentScore) });
+    }
+
+    // Keep sorted by score
+    board.sort((a, b) => b.score - a.score);
+    saveLeaderboard(board);
+
+    // Render the active player's telemetry row
+    listEl.innerHTML = board.map((entry, idx) => {
+        const isSelf = entry.name.toLowerCase() === playerName.toLowerCase();
+        return `
+            <div class="lb-row ${isSelf ? 'active-user' : ''}">
+                <div class="lb-left">
+                    <span class="lb-rank">#${idx + 1}</span>
+                    <span class="lb-name">${entry.name} ${isSelf ? '★' : ''}</span>
+                </div>
+                <span class="lb-score">${entry.score} PTS</span>
+            </div>
+        `;
+    }).join('');
+}
+
+// Points accumulator: ticks every second during active coding
+function startScoreTicker() {
+    clearInterval(scoreTickInterval);
+    const conf = DIFFICULTY_CONFIG[activeLevel];
+
+    scoreTickInterval = setInterval(() => {
+        if (isGameStarted) {
+            // Passive survival points: 5 pts * difficulty multiplier per second
+            currentScore += (5 * conf.scoreMult);
+            updateLeaderboardUI();
+        }
+    }, 1000);
+}
+
+// Bonus points awarded when all assertions pass in gaslight.js
+window.awardVerificationBonus = function() {
+    const conf = DIFFICULTY_CONFIG[activeLevel];
+    const bonus = Math.floor(750 * conf.scoreMult);
+    currentScore += bonus;
+    updateLeaderboardUI();
+};
+
 function renderProblemSpec(ch) {
     const titleEl = document.getElementById("spec-title");
     const catEl = document.getElementById("spec-category");
@@ -139,9 +219,6 @@ function renderProblemSpec(ch) {
     bodyEl.innerHTML = html;
 }
 
-/**
- * Loads problem and resets editor into standby
- */
 function loadChallengeUI(challenge) {
     renderProblemSpec(challenge);
 
@@ -155,14 +232,12 @@ function loadChallengeUI(challenge) {
     setStandbyState();
 }
 
-/**
- * Freezes the timers and agent until user types their first keystroke
- */
 function setStandbyState() {
     isGameStarted = false;
     isCoolingDown = false;
     clearInterval(masterLoopInterval);
     clearInterval(attackTimerInterval);
+    clearInterval(scoreTickInterval);
 
     const badge = document.getElementById('game-status');
     const statusText = document.getElementById('threat-status-text');
@@ -227,6 +302,7 @@ function startAttackPhase() {
     }
 
     renderRadialClock(currentPhaseSecondsLeft, "SEC REMAIN", 0);
+    startScoreTicker();
 
     attackTimerInterval = setInterval(() => {
         if (!isCoolingDown && !isMutating && isGameStarted) {
@@ -290,9 +366,6 @@ function startCooldownPhase() {
     }, 1000);
 }
 
-/**
- * Handles circular gauge progress and crisp stroke dashoffset (glow-free)
- */
 function renderRadialClock(displayVal, unitText, ratio) {
     const circle = document.getElementById('gauge-circle-fill');
     const valText = document.getElementById('meter-digital-val');
@@ -354,14 +427,12 @@ function setupMonaco() {
             if (window.editor) window.editor.layout();
         });
 
-        // First Keystroke Trigger Guard
         window.editor.onDidChangeModelContent(() => {
             if (!programmaticUpdate && !isGameStarted) {
                 startAttackPhase();
             }
         });
 
-        // Instant attack trigger on Enter if active
         window.editor.onKeyUp((e) => {
             if (e.keyCode === monaco.KeyCode.Enter && isGameStarted && !isCoolingDown && !isMutating) {
                 setTimeout(() => triggerSabotageEvent(), 80);
@@ -416,14 +487,17 @@ async function triggerSabotageEvent() {
 
             sfx.playStrike();
 
-            // Screen micro-glitch
+            // Resilience points: +25 pts * multiplier survived
+            const conf = DIFFICULTY_CONFIG[activeLevel];
+            currentScore += (25 * conf.scoreMult);
+            updateLeaderboardUI();
+
             const editorBox = document.querySelector(".editor-enclosure");
             if (editorBox) {
                 editorBox.classList.add("editor-glitch-active");
                 setTimeout(() => editorBox.classList.remove("editor-glitch-active"), 200);
             }
 
-            // Laser line spike
             activeDecorations = window.editor.deltaDecorations(activeDecorations, [
                 {
                     range: new monaco.Range(targetLineNumber, 1, targetLineNumber, mutatedText.length + 1),
@@ -440,9 +514,6 @@ async function triggerSabotageEvent() {
     }
 }
 
-/**
- * Launch Sequence: Terminal Boot -> Difficulty Select
- */
 function initLaunchModal() {
     const bootLines = [
         ">> INITIALIZING CHAOS PROTOCOL v4.0.2...",
@@ -450,7 +521,7 @@ function initLaunchModal() {
         ">> COMPILING CPYTHON 3.12 KERNEL IMAGES...",
         ">> SCANNING ADVERSARIAL NEURAL PATHWAYS...",
         ">> STATUS: ALL SUBSYSTEMS NOMINAL.",
-        ">> SELECT THREAT PROFILE TO ENGAGE."
+        ">> ENTER OPERATOR IDENTIFIER & ENGAGE."
     ];
 
     const streamEl = document.getElementById("boot-stream");
@@ -470,6 +541,8 @@ function initLaunchModal() {
             setTimeout(() => {
                 terminalBox.style.display = "none";
                 diffStage.classList.add("active");
+                const nameInput = document.getElementById("player-name-input");
+                if (nameInput) nameInput.focus();
             }, 500);
         }
     }
@@ -489,6 +562,14 @@ function initLaunchModal() {
     startBtn.addEventListener("click", () => {
         sfx.init();
 
+        const inputEl = document.getElementById("player-name-input");
+        if (inputEl && inputEl.value.trim().length > 0) {
+            playerName = inputEl.value.trim().substring(0, 16);
+        }
+
+        const diagUser = document.getElementById("diag-user-val");
+        if (diagUser) diagUser.innerText = playerName;
+
         if (selectedDifficulty === "random") {
             isRandomDifficulty = true;
             activeLevel = Math.floor(Math.random() * 5) + 1;
@@ -504,6 +585,9 @@ function initLaunchModal() {
 
         document.getElementById("launch-overlay").classList.add("hidden");
 
+        // Clear any old mock data from previous sessions and initialize fresh user row
+        saveLeaderboard([]);
+        updateLeaderboardUI();
         setStandbyState();
 
         if (window.editor) {

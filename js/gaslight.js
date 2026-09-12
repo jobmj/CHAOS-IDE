@@ -10,6 +10,9 @@ function printToTerminal(text, color = "#00f0ff") {
     }
 }
 
+/**
+ * Streams terminal text line-by-line to simulate a mainframe console execution
+ */
 async function streamOutput(text, color = "#00f0ff") {
     const out = document.getElementById("console-output");
     if (!out) return;
@@ -19,13 +22,15 @@ async function streamOutput(text, color = "#00f0ff") {
     const lines = text.split("\n");
     for (let line of lines) {
         out.innerText += line + "\n";
-        out.parentElement.scrollTop = out.parentElement.scrollHeight;
+        if (out.parentElement) {
+            out.parentElement.scrollTop = out.parentElement.scrollHeight;
+        }
         await new Promise(r => setTimeout(r, 40));
     }
 }
 
 /**
- * Initializes Pyodide asynchronously in background without blocking Monaco or circular meter
+ * Initializes Pyodide asynchronously in background without blocking Monaco or the circular meter
  */
 async function initPyodideRuntime() {
     printToTerminal(">> [SYSTEM]: INITIALIZING NEON WEBASSEMBLY RUNTIME...", "#00f0ff");
@@ -73,6 +78,7 @@ Serve this directory with a local HTTP server:
         isPythonLoading = false;
         pyodideBootError = String(err);
         printToTerminal(`>> [FATAL BOOT ERROR]:\n${err}`, "#ff003c");
+        console.error("[Pyodide Boot]", err);
     }
 }
 
@@ -111,8 +117,10 @@ execution_result = {
 }
 
 try:
+    # 1. Execute User Solution
 ${userCode.split('\n').map(l => '    ' + l).join('\n')}
 
+    # 2. Execute Test Assertions
 ${testSuiteCode.split('\n').map(l => '    ' + l).join('\n')}
 
     execution_result["passed"] = True
@@ -142,6 +150,9 @@ execution_result
     }
 }
 
+/**
+ * Handles test execution and triggers leaderboard verification bonus
+ */
 function initSubmissionHandler() {
     const runBtn = document.getElementById("run-btn");
     if (!runBtn) return;
@@ -164,10 +175,15 @@ function initSubmissionHandler() {
         runBtn.innerText = originalText;
 
         if (res.passed) {
-            const finalMsg = `[STATUS: MISSION ACCOMPLISHED]\n============================================================\n${res.stdout}\n>> ALL TEST CASES PASSED WITH EXIT CODE 0.\n>> Defense protocol held! Click 'Next Mission' to advance.`;
+            // Trigger bonus points on leaderboard
+            if (typeof window.awardVerificationBonus === "function") {
+                window.awardVerificationBonus();
+            }
+
+            const finalMsg = `[STATUS: MISSION ACCOMPLISHED]\n============================================================\n${res.stdout}\n>> ALL TEST CASES PASSED WITH EXIT CODE 0.\n>> VERIFICATION BONUS AWARDED TO LEADERBOARD!\n>> Click 'Next Mission' to advance.`;
             await streamOutput(finalMsg, "#00ff66");
         } else {
-            const errorMsg = `[STATUS: COMPILATION / ASSERTION BREACH]\n============================================================\n${res.stderr || "Unknown runtime execution error."}\n\n>> [HINT]: Inspect line mutations and clean syntax flaws before re-verifying.`;
+            const errorMsg = `[STATUS: COMPILATION / ASSERTION BREACH]\n============================================================\n${res.stderr || "Unknown runtime execution error."}\n\n>> [HINT]: Inspect line mutations and clean up syntax flaws before re-verifying.`;
             await streamOutput(errorMsg, "#ff003c");
         }
     });
