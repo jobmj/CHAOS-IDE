@@ -11,6 +11,25 @@ function printToTerminal(text, color = "#00f0ff") {
 }
 
 /**
+ * Streams terminal text line-by-line to simulate a mainframe console execution
+ */
+async function streamOutput(text, color = "#00f0ff") {
+    const out = document.getElementById("console-output");
+    if (!out) return;
+    out.style.color = color;
+    out.innerText = "";
+    
+    const lines = text.split("\n");
+    for (let line of lines) {
+        out.innerText += line + "\n";
+        if (out.parentElement) {
+            out.parentElement.scrollTop = out.parentElement.scrollHeight;
+        }
+        await new Promise(r => setTimeout(r, 40));
+    }
+}
+
+/**
  * Initializes Pyodide asynchronously in background without blocking Monaco or the circular meter
  */
 async function initPyodideRuntime() {
@@ -52,7 +71,7 @@ Serve this directory with a local HTTP server:
         isPythonLoading = false;
         printToTerminal(
 `>> [RUNTIME READY]: CPython 3.12 WebAssembly Kernel Online.
->> Survive the attack phase until meltdown, clean the code, and click 'Run & Verify'.`, 
+>> Survive the attack phase, repair injected mutations, and click 'Run & Verify'.`, 
             "#00ff66"
         );
     } catch (err) {
@@ -131,6 +150,9 @@ execution_result
     }
 }
 
+/**
+ * Handles test execution and triggers leaderboard verification bonus
+ */
 function initSubmissionHandler() {
     const runBtn = document.getElementById("run-btn");
     if (!runBtn) return;
@@ -153,23 +175,16 @@ function initSubmissionHandler() {
         runBtn.innerText = originalText;
 
         if (res.passed) {
-            printToTerminal(
-`[STATUS: MISSION ACCOMPLISHED]
-============================================================
-${res.stdout}
->> ALL TEST CASES PASSED WITH EXIT CODE 0.
->> The defense protocol held! Click 'Next Mission' to advance.`,
-                "#00ff66"
-            );
-        } else {
-            printToTerminal(
-`[STATUS: COMPILATION / ASSERTION BREACH]
-============================================================
-${res.stderr || "Unknown runtime execution error."}
+            // Trigger bonus points on leaderboard
+            if (typeof window.awardVerificationBonus === "function") {
+                window.awardVerificationBonus();
+            }
 
->> [HINT]: Inspect line mutations and clean up syntax flaws before re-verifying.`,
-                "#ff003c"
-            );
+            const finalMsg = `[STATUS: MISSION ACCOMPLISHED]\n============================================================\n${res.stdout}\n>> ALL TEST CASES PASSED WITH EXIT CODE 0.\n>> VERIFICATION BONUS AWARDED TO LEADERBOARD!\n>> Click 'Next Mission' to advance.`;
+            await streamOutput(finalMsg, "#00ff66");
+        } else {
+            const errorMsg = `[STATUS: COMPILATION / ASSERTION BREACH]\n============================================================\n${res.stderr || "Unknown runtime execution error."}\n\n>> [HINT]: Inspect line mutations and clean up syntax flaws before re-verifying.`;
+            await streamOutput(errorMsg, "#ff003c");
         }
     });
 }

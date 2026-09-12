@@ -4,23 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChaosIDE // Neon Survival</title>
-    <!-- Modern Cyberpunk Typography -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     
-    <!-- 1. Monaco Editor Loader -->
+    <!-- Monaco Editor AMD Loader & Pyodide Engine -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
-    
-    <!-- 2. Pyodide CPython Engine -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 
     <style>
         :root {
             --bg-void: #030308;
             --bg-panel: #070913;
-            --bg-glass: rgba(10, 13, 26, 0.92);
+            --bg-glass: rgba(10, 13, 26, 0.94);
             --border-neon: #1a233d;
+            --border-highlight: rgba(0, 240, 255, 0.4);
             
             --neon-pink: #ff0055;
             --neon-red: #ff003c;
@@ -49,7 +48,9 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* CRT Scanline Overlay */
         .master-app {
+            position: relative;
             display: flex;
             flex-direction: column;
             height: 100vh;
@@ -57,9 +58,229 @@
             background: radial-gradient(circle at 50% 0%, #151824 0%, var(--bg-void) 80%);
         }
 
-        /* Top Cyber Toolbar */
+        .master-app::before {
+            content: " ";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.22) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* ================= 1. LAUNCH & BOOT OVERLAY ================= */
+        #launch-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(3, 3, 8, 0.98);
+            backdrop-filter: blur(25px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        #launch-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .launch-card {
+            width: 620px;
+            background: #080b16;
+            border: 2px solid rgba(0, 240, 255, 0.35);
+            box-shadow: 0 0 60px rgba(0, 240, 255, 0.18), inset 0 0 30px rgba(0, 240, 255, 0.04);
+            border-radius: 12px;
+            padding: 32px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .launch-title-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 6px;
+        }
+
+        .launch-logo {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: #ffffff;
+            text-shadow: 0 0 16px var(--neon-cyan);
+        }
+
+        .launch-logo span {
+            color: var(--neon-pink);
+            text-shadow: 0 0 18px var(--neon-pink);
+        }
+
+        .launch-sub {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: #6a7d9f;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .boot-terminal {
+            background: #04050a;
+            border: 1px solid #161e38;
+            border-radius: 6px;
+            padding: 16px;
+            height: 180px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--neon-cyan);
+            line-height: 1.6;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .boot-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: var(--neon-cyan);
+            vertical-align: middle;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .difficulty-stage {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .difficulty-stage.active {
+            display: flex;
+        }
+
+        /* Player Name Input Field */
+        .player-input-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-label {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .player-name-field {
+            background: #04060e;
+            border: 1px solid #1f2b4d;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: #ffffff;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .player-name-field:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+        }
+
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .diff-card-btn {
+            background: #0c1122;
+            border: 1px solid #1b2545;
+            border-radius: 6px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .diff-card-btn:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+        }
+
+        .diff-card-btn.active {
+            border-color: var(--neon-pink);
+            background: rgba(255, 0, 85, 0.1);
+            box-shadow: 0 0 16px rgba(255, 0, 85, 0.4);
+        }
+
+        .diff-card-name {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .diff-card-desc {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: #6d80a6;
+        }
+
+        .diff-card-btn.random-span {
+            grid-column: span 2;
+            align-items: center;
+            text-align: center;
+        }
+
+        .btn-launch-start {
+            font-family: var(--font-display);
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            padding: 14px;
+            border-radius: 6px;
+            border: none;
+            background: var(--neon-green);
+            color: #030805;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.5);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .btn-launch-start:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.8);
+            transform: scale(1.02);
+        }
+
+        /* ================= 2. MAIN APPLICATION WORKSPACE ================= */
         .neon-toolbar {
-            height: 60px;
+            height: 56px;
             background: var(--bg-glass);
             backdrop-filter: blur(16px);
             border-bottom: 2px solid rgba(0, 240, 255, 0.3);
@@ -67,7 +288,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
+            padding: 0 20px;
             flex-shrink: 0;
             z-index: 10;
         }
@@ -80,7 +301,7 @@
 
         .brand-logo {
             font-family: var(--font-display);
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 900;
             letter-spacing: 2px;
             color: #ffffff;
@@ -94,9 +315,9 @@
 
         .threat-pill {
             font-family: var(--font-display);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
-            padding: 5px 14px;
+            padding: 4px 12px;
             border-radius: 4px;
             letter-spacing: 1px;
             text-transform: uppercase;
@@ -104,6 +325,13 @@
             align-items: center;
             gap: 8px;
             transition: all 0.3s ease;
+        }
+
+        .threat-pill.standby {
+            background: rgba(255, 145, 0, 0.15);
+            border: 1px solid var(--neon-amber);
+            color: var(--neon-amber);
+            box-shadow: 0 0 14px rgba(255, 145, 0, 0.4);
         }
 
         .threat-pill.hunting {
@@ -134,51 +362,18 @@
             50% { opacity: 0.3; transform: scale(1.3); }
         }
 
-        .deck-controls {
+        .deck-actions {
             display: flex;
             align-items: center;
-            gap: 16px;
-        }
-
-        .diff-selector-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(13, 17, 34, 0.9);
-            border: 1px solid rgba(0, 240, 255, 0.4);
-            border-radius: 6px;
-            padding: 5px 10px;
-        }
-
-        .diff-label {
-            font-family: var(--font-display);
-            font-size: 10px;
-            color: var(--neon-cyan);
-            letter-spacing: 1px;
-        }
-
-        .diff-selector-wrap select {
-            background: transparent;
-            color: #ffffff;
-            font-family: var(--font-sub);
-            font-size: 13px;
-            font-weight: 700;
-            border: none;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .diff-selector-wrap select option {
-            background: #0d1122;
-            color: #ffffff;
+            gap: 12px;
         }
 
         .btn-neon {
             font-family: var(--font-display);
             font-size: 11px;
             font-weight: 800;
-            letter-spacing: 1.5px;
-            padding: 8px 18px;
+            letter-spacing: 1px;
+            padding: 8px 16px;
             border-radius: 4px;
             border: none;
             cursor: pointer;
@@ -201,75 +396,182 @@
         .btn-neon-primary {
             background: var(--neon-green);
             color: #030805;
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.7);
+            box-shadow: 0 0 18px rgba(0, 255, 102, 0.6);
         }
 
         .btn-neon-primary:hover {
-            box-shadow: 0 0 30px rgba(0, 255, 102, 0.9);
+            box-shadow: 0 0 28px rgba(0, 255, 102, 0.9);
             transform: scale(1.02);
         }
 
-        .btn-neon-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Viewport Layout */
-        .viewport-deck {
-            display: flex;
+        /* 3-Column Split Viewport */
+        .workspace-viewport {
+            display: grid;
+            grid-template-columns: 460px 1fr 310px;
             flex: 1;
             min-height: 0;
-            padding: 14px 18px;
-            gap: 16px;
+            padding: 12px 16px;
+            gap: 14px;
+            animation: crtTurnOn 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
 
-        /* Left Workspace Column */
-        .workspace-main {
+        @keyframes crtTurnOn {
+            0% { transform: scaleY(0.005) scaleX(0.8); opacity: 0; filter: brightness(3); }
+            50% { transform: scaleY(1) scaleX(0.98); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        }
+
+        /* Column 1: HackerRank Problem Spec */
+        .problem-spec-panel {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-neon);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .spec-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-neon);
+            background: #090c17;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .spec-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .spec-cat {
+            font-family: var(--font-display);
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--neon-cyan);
+            letter-spacing: 1px;
+        }
+
+        .spec-difficulty-badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-easy {
+            background: rgba(0, 255, 102, 0.12);
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+        }
+
+        .badge-medium {
+            background: rgba(255, 145, 0, 0.12);
+            color: var(--neon-amber);
+            border: 1px solid var(--neon-amber);
+        }
+
+        .badge-hard {
+            background: rgba(255, 0, 60, 0.12);
+            color: var(--neon-red);
+            border: 1px solid var(--neon-red);
+        }
+
+        .spec-title {
+            font-family: var(--font-display);
+            font-size: 17px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .spec-scrollable-body {
             flex: 1;
+            overflow-y: auto;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #bac8e6;
+        }
+
+        .spec-scrollable-body code {
+            font-family: var(--font-mono);
+            background: #111628;
+            color: var(--neon-cyan);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .spec-section-title {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .spec-section-title::before {
+            content: "";
+            width: 3px;
+            height: 12px;
+            background: var(--neon-cyan);
+            border-radius: 2px;
+        }
+
+        .spec-sample-box {
+            background: #05070f;
+            border: 1px solid #161e38;
+            border-radius: 6px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sample-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            color: #6a7d9f;
+            text-transform: uppercase;
+        }
+
+        .sample-code {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #ffffff;
+            white-space: pre-wrap;
+        }
+
+        .spec-constraints-list {
+            padding-left: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Column 2: Editor & Terminal */
+        .workspace-center {
             display: flex;
             flex-direction: column;
             min-width: 0;
             gap: 12px;
         }
 
-        .mission-intel-card {
-            background: var(--bg-glass);
-            border: 1px solid rgba(0, 240, 255, 0.25);
-            border-left: 5px solid var(--neon-cyan);
-            padding: 12px 18px;
-            border-radius: 6px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex-shrink: 0;
-        }
-
-        .intel-tag {
-            font-family: var(--font-display);
-            font-size: 10px;
-            font-weight: 800;
-            color: var(--neon-cyan);
-            letter-spacing: 1.5px;
-        }
-
-        .mission-title {
-            font-family: var(--font-display);
-            font-size: 15px;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: 0.5px;
-        }
-
-        .mission-desc {
-            font-family: var(--font-sub);
-            font-size: 14px;
-            color: #92a4cc;
-            line-height: 1.3;
-        }
-
-        /* Monaco Editor Panel */
         .editor-enclosure {
             flex: 7;
             min-height: 250px;
@@ -280,6 +582,20 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+        }
+
+        @keyframes glitchJitter {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-3px, 1px); }
+            40% { transform: translate(3px, -2px); }
+            60% { transform: translate(-2px, -1px); }
+            80% { transform: translate(2px, 1px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .editor-glitch-active {
+            animation: glitchJitter 0.2s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            border-color: var(--neon-pink) !important;
         }
 
         .editor-top-banner {
@@ -308,7 +624,6 @@
             height: 100%;
         }
 
-        /* Terminal Enclosure */
         .terminal-enclosure {
             flex: 3;
             min-height: 140px;
@@ -372,18 +687,18 @@
             word-break: break-all;
         }
 
-        /* Right Telemetry Radar Deck */
+        /* Column 3: Radar Telemetry + Leaderboard Deck */
         .sidebar-telemetry {
-            width: 320px;
             background: var(--bg-glass);
             backdrop-filter: blur(14px);
             border: 1px solid var(--border-neon);
             border-radius: 8px;
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            gap: 20px;
+            padding: 14px;
+            gap: 12px;
             flex-shrink: 0;
+            overflow-y: auto;
             box-shadow: 0 8px 30px rgba(0,0,0,0.7);
         }
 
@@ -391,24 +706,24 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
-            padding-bottom: 20px;
+            gap: 8px;
+            padding-bottom: 12px;
             border-bottom: 1px solid rgba(26, 35, 61, 0.8);
         }
 
         .radar-title {
             font-family: var(--font-display);
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 800;
-            letter-spacing: 2px;
+            letter-spacing: 1.5px;
             color: var(--neon-cyan);
             text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
         }
 
         .circular-gauge-container {
             position: relative;
-            width: 190px;
-            height: 190px;
+            width: 140px;
+            height: 140px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -416,30 +731,35 @@
 
         .gauge-svg {
             transform: rotate(-90deg);
-            width: 190px;
-            height: 190px;
+            width: 140px;
+            height: 140px;
         }
 
         .gauge-track {
             fill: none;
             stroke: #0c1022;
-            stroke-width: 12;
+            stroke-width: 10;
         }
 
         .gauge-fill {
             fill: none;
-            stroke-width: 12;
+            stroke-width: 10;
             stroke-linecap: round;
             stroke-dasharray: 471.24;
             stroke-dashoffset: 471.24;
-            transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
-            stroke: var(--neon-red);
-            filter: drop-shadow(0 0 12px var(--neon-red));
+            transition: stroke-dashoffset 0.3s ease;
+            stroke: url(#attackGrad);
+            filter: none !important;
+        }
+
+        .gauge-fill.standby-mode {
+            stroke: url(#standbyGrad);
+            filter: none !important;
         }
 
         .gauge-fill.cooling-mode {
-            stroke: var(--neon-cyan);
-            filter: drop-shadow(0 0 14px var(--neon-cyan));
+            stroke: url(#cooldownGrad);
+            filter: none !important;
         }
 
         .gauge-center-data {
@@ -452,15 +772,24 @@
 
         .gauge-value {
             font-family: var(--font-display);
-            font-size: 34px;
+            font-size: 22px;
             font-weight: 900;
             color: #ffffff;
-            text-shadow: 0 0 18px rgba(255,255,255,0.6);
+            text-shadow: 0 0 14px rgba(255,255,255,0.6);
+        }
+
+        @keyframes urgencyPulse {
+            0%, 100% { transform: scale(1); color: #ffffff; }
+            50% { transform: scale(1.18); color: var(--neon-red); }
+        }
+
+        .critical-tick {
+            animation: urgencyPulse 0.5s ease infinite !important;
         }
 
         .gauge-unit {
             font-family: var(--font-mono);
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 700;
             letter-spacing: 1px;
             color: #5c6c94;
@@ -469,14 +798,14 @@
         .diag-readout-grid {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
 
         .diag-item {
             background: #060914;
             border: 1px solid #13192d;
             border-radius: 6px;
-            padding: 10px 14px;
+            padding: 8px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -484,7 +813,7 @@
 
         .diag-meta {
             font-family: var(--font-display);
-            font-size: 10px;
+            font-size: 8.5px;
             font-weight: 700;
             color: #5d6f99;
             letter-spacing: 1px;
@@ -492,13 +821,96 @@
 
         .diag-val {
             font-family: var(--font-mono);
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 700;
             color: var(--neon-cyan);
             text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
         }
 
-        /* Targeted neon red laser pulse on the mutated line */
+        /* Leaderboard Deck in the Bottom Empty Space */
+        .leaderboard-card {
+            background: #04060f;
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #141b31;
+            padding-bottom: 6px;
+        }
+
+        .leaderboard-title {
+            font-family: var(--font-display);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--neon-amber);
+            text-transform: uppercase;
+        }
+
+        .live-score-badge {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--neon-green);
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+
+        .lb-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #080b18;
+            border: 1px solid #141b31;
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+        }
+
+        .lb-row.active-user {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 240, 255, 0.08);
+        }
+
+        .lb-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .lb-rank {
+            color: #5d6f99;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        .lb-name {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .lb-score {
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }
+
+        /* Targeted Laser Spike */
         @keyframes neonLineSpike {
             0% {
                 background-color: rgba(255, 0, 60, 0.85);
@@ -521,56 +933,94 @@
             z-index: 20;
         }
 
-        .corrupted-line-glyph {
-            background: #ff003c;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #ff003c;
-            margin-left: 5px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
+    <!-- 1. STAGED LAUNCH OVERLAY WITH PLAYER NAME PROMPT -->
+    <div id="launch-overlay">
+        <div class="launch-card">
+            <div class="launch-title-box">
+                <h1 class="launch-logo">CHAOS<span>IDE</span></h1>
+                <p class="launch-sub">Adversarial Code Survival Terminal</p>
+            </div>
+
+            <div id="boot-terminal-box" class="boot-terminal">
+                <div id="boot-stream"></div>
+                <span class="boot-cursor"></span>
+            </div>
+
+            <div id="difficulty-stage-box" class="difficulty-stage">
+                <!-- Player Name Prompt -->
+                <div class="player-input-wrap">
+                    <label class="input-label" for="player-name-input">> OPERATOR CODENAME:</label>
+                    <input type="text" id="player-name-input" class="player-name-field" placeholder="Enter hacker handle (e.g., Neo_01)" maxlength="16" value="Operator_01" autocomplete="off" />
+                </div>
+
+                <div class="difficulty-grid">
+                    <div class="diff-card-btn" data-diff="1">
+                        <span class="diff-card-name">LVL 1 · Mild Annoyance</span>
+                        <span class="diff-card-desc">Cadence 3.0s · 1.0x PTS</span>
+                    </div>
+                    <div class="diff-card-btn" data-diff="2">
+                        <span class="diff-card-name">LVL 2 · Script Kiddie</span>
+                        <span class="diff-card-desc">Cadence 2.6s · 1.2x PTS</span>
+                    </div>
+                    <div class="diff-card-btn active" data-diff="3">
+                        <span class="diff-card-name">LVL 3 · Chaos Gremlin</span>
+                        <span class="diff-card-desc">Cadence 2.2s · 1.5x PTS</span>
+                    </div>
+                    <div class="diff-card-btn" data-diff="4">
+                        <span class="diff-card-name">LVL 4 · Code Demon</span>
+                        <span class="diff-card-desc">Cadence 2.0s · 2.0x PTS</span>
+                    </div>
+                    <div class="diff-card-btn random-span" data-diff="random">
+                        <span class="diff-card-name">🎲 RANDOM SHUFFLE</span>
+                        <span class="diff-card-desc">Random threat matrix & score scaling</span>
+                    </div>
+                </div>
+
+                <button id="launch-btn" class="btn-launch-start">INITIALIZE WORKSPACE ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN APPLICATION -->
     <div class="master-app">
-        <!-- Top Toolbar -->
         <header class="neon-toolbar">
             <div class="brand-core">
                 <span class="brand-logo">CHAOS<span>IDE</span></span>
-                <div id="game-status" class="threat-pill hunting">
+                <div id="game-status" class="threat-pill standby">
                     <span class="status-orb"></span>
-                    <span id="threat-status-text">ATTACK ACTIVE</span>
+                    <span id="threat-status-text">STANDBY // AWAITING FIRST KEYSTROKE</span>
                 </div>
             </div>
 
-            <div class="deck-controls">
-                <div class="diff-selector-wrap">
-                    <span class="diff-label">THREAT MATRIX:</span>
-                    <select id="difficulty-select">
-                        <option value="1">LVL 1 · Mild Annoyance</option>
-                        <option value="2">LVL 2 · Script Kiddie</option>
-                        <option value="3" selected>LVL 3 · Chaos Gremlin</option>
-                        <option value="4">LVL 4 · Code Demon</option>
-                        <option value="5">LVL 5 · APOCALYPSE</option>
-                        <option value="random">🎲 Random Shuffle</option>
-                    </select>
-                </div>
-
+            <div class="deck-actions">
                 <button id="next-challenge-btn" class="btn-neon btn-neon-secondary">Next Mission</button>
                 <button id="run-btn" class="btn-neon btn-neon-primary">▶ Run & Verify</button>
             </div>
         </header>
 
-        <!-- Viewport Deck -->
-        <main class="viewport-deck">
-            <!-- Left Workspace -->
-            <div class="workspace-main">
-                <section class="mission-intel-card">
-                    <div class="intel-header-row">
-                        <span class="intel-tag" id="challenge-cat">ARRAYS & HASHING</span>
+        <main class="workspace-viewport">
+            <!-- Left: HackerRank Problem Specification -->
+            <section class="problem-spec-panel">
+                <div class="spec-header">
+                    <div class="spec-meta-row">
+                        <span class="spec-cat" id="spec-category">ARRAYS & HASHING</span>
+                        <span class="spec-difficulty-badge badge-easy" id="spec-diff-badge">EASY</span>
                     </div>
-                    <h2 class="mission-title" id="challenge-title">Challenge 01: Two Sum</h2>
-                    <p class="mission-desc" id="challenge-desc">Return the indices of the two numbers that add up to target.</p>
-                </section>
+                    <h2 class="spec-title" id="spec-title">Two Sum</h2>
+                </div>
 
+                <div class="spec-scrollable-body" id="spec-body"></div>
+            </section>
+
+            <!-- Center: Monaco Editor + Terminal Output -->
+            <section class="workspace-center">
                 <div class="editor-enclosure">
                     <div class="editor-top-banner">
                         <div class="code-tab">
@@ -591,38 +1041,68 @@
                         <pre id="console-output"></pre>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Right Telemetry Deck -->
+            <!-- Right: Radar Telemetry Deck + Leaderboard -->
             <aside class="sidebar-telemetry">
                 <div class="radar-card">
                     <span class="radar-title" id="meter-label">CORE TEMPERATURE</span>
                     
                     <div class="circular-gauge-container">
                         <svg class="gauge-svg" viewBox="0 0 190 190">
+                            <defs>
+                                <linearGradient id="attackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--neon-green)" />
+                                    <stop offset="50%" stop-color="var(--neon-amber)" />
+                                    <stop offset="100%" stop-color="var(--neon-red)" />
+                                </linearGradient>
+
+                                <linearGradient id="cooldownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#00ffcc" />
+                                    <stop offset="50%" stop-color="var(--neon-cyan)" />
+                                    <stop offset="100%" stop-color="#0066ff" />
+                                </linearGradient>
+
+                                <linearGradient id="standbyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#3a4a6b" />
+                                    <stop offset="100%" stop-color="var(--neon-amber)" />
+                                </linearGradient>
+                            </defs>
+
                             <circle class="gauge-track" cx="95" cy="95" r="75"></circle>
-                            <circle id="gauge-circle-fill" class="gauge-fill" cx="95" cy="95" r="75"></circle>
+                            <circle id="gauge-circle-fill" class="gauge-fill standby-mode" cx="95" cy="95" r="75"></circle>
                         </svg>
                         
                         <div class="gauge-center-data">
-                            <span class="gauge-value" id="meter-digital-val">0</span>
-                            <span class="gauge-unit" id="meter-digital-unit">% HEAT</span>
+                            <span class="gauge-value" id="meter-digital-val">PAUSED</span>
+                            <span class="gauge-unit" id="meter-digital-unit">TYPE TO START</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="diag-readout-grid">
                     <div class="diag-item">
-                        <span class="diag-meta">CURRENT LEVEL</span>
+                        <span class="diag-meta">OPERATOR</span>
+                        <span class="diag-val" id="diag-user-val">UNKNOWN</span>
+                    </div>
+                    <div class="diag-item">
+                        <span class="diag-meta">THREAT TIER</span>
                         <span class="diag-val" id="diag-lvl-val">LVL 3</span>
                     </div>
                     <div class="diag-item">
-                        <span class="diag-meta">OVERHEAT THRESHOLD</span>
-                        <span class="diag-val">100%</span>
+                        <span class="diag-meta">DEFENSE STATUS</span>
+                        <span class="diag-val" id="diag-def-val">IDLE</span>
                     </div>
-                    <div class="diag-item">
-                        <span class="diag-meta">DEFENSE LOCK</span>
-                        <span class="diag-val" id="diag-def-val">MUTATING</span>
+                </div>
+
+                <!-- LIVE SURVIVAL LEADERBOARD -->
+                <div class="leaderboard-card">
+                    <div class="leaderboard-header">
+                        <span class="leaderboard-title">SURVIVAL LEADERBOARD</span>
+                        <span class="live-score-badge" id="hud-live-score">0 PTS</span>
+                    </div>
+                    <div class="leaderboard-list" id="leaderboard-rows">
+                        <!-- Populated dynamically via JS -->
                     </div>
                 </div>
             </aside>
@@ -630,9 +1110,9 @@
     </div>
 
     <!-- Scripts with Cache Busters -->
-    <script src="js/challenges.js?v=3"></script>
-    <script src="js/llm.js?v=3"></script>
-    <script src="js/editor.js?v=3"></script>
-    <script src="js/gaslight.js?v=3"></script>
+    <script src="js/challenges.js?v=8"></script>
+    <script src="js/llm.js?v=8"></script>
+    <script src="js/editor.js?v=8"></script>
+    <script src="js/gaslight.js?v=8"></script>
 </body>
 </html>
