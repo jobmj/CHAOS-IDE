@@ -11,8 +11,8 @@
 
 
 ### Team Members
-- Team Lead: Jobin M John - [TKM College of Engineering]
-- Member 2: Mohamed Fahad Lal - [TKM College of Engineering]
+- Team Lead: Jobin M John - TKM College of Engineering
+- Member 2: Mohamed Fahad Lal - TKM College of Engineering
 
 
 ### Project Description
@@ -20,7 +20,7 @@ A thrilling speedrun coding game where you race against an insufferable AI codin
 
 
 ### The Problem (that doesn't exist)
-Modern AI coding assistants are too boring (and very helpful too!). Programmers fully rely on these AI and doesnt put any efforts, making programming less challenging and no fun at all.
+Modern AI coding assistants are too boring (and very helpful too! ). Programmers fully rely on these AI and doesn't put any efforts, making programming less challenging and no fun at all.
 
 ### The Solution (that nobody asked for)
 Chaos IDE: A gamified "Evil AI Assistant" speedrun game.You are given simple algorithmic challenges, but the IDE alternates unpredictably creates error in you code (like changing syntax,changing logics etc) and then comes in safe mode where programmers get a short window to change all errors and submit the correct code.
@@ -57,7 +57,7 @@ git clone https://github.com/jobmj/CHAOS-IDE.git
 
 ### 2. Navigate to the project directory
 ``` bash
-cd chaos-ide
+cd CHAOS-IDE
 ```
 ## Run
 ### Option 1: Open index.html directly in any modern browser
@@ -94,7 +94,7 @@ Workflow Diagram
 
 ### Project Demo
 # Video
-(https://drive.google.com/file/d/1CNEUoQ-jyp_ga1OI7e_WJzQmE7R6-rjJ/view?usp=sharing)
+https://drive.google.com/file/d/1CNEUoQ-jyp_ga1OI7e_WJzQmE7R6-rjJ/view?usp=sharing
 
 This demonstration showcases the algorithmic gauntlet built into ChaosIDE, featuring popular coding problems from challenges.js such as Two Sum, Valid Palindrome, FizzBuzz, Valid Parentheses, and Maximum Subarray. The video highlights how each problem mounts with structured problem statements, input/output specifications, constraints, and sample cases alongside a clean Python starter stub. As you work through classic data structures and programming patterns—from two-pointer string validations to dynamic programming and hash lookups—the adversarial AI targets critical solution logic like loop ranges, conditionals, and array operations. The demo concludes with the built-in test assertion suites executing in the client-side WebAssembly terminal, validating every edge case and test before advancing to the next problem in the pool.
 
