@@ -73,17 +73,22 @@ For Software:
 <img width="868" height="662" alt="chaoside1" src="https://github.com/user-attachments/assets/39771d05-d5f5-474c-9be1-1d2c1921ea04" />
 Loading Page
 
+
 <img width="1915" height="867" alt="chaoside2" src="https://github.com/user-attachments/assets/433756fc-e2c2-4b2a-ba32-005c1746168d" />
 Interactive IDE where you can test your skills against AI
+
 
 <img width="1917" height="877" alt="chaoside4" src="https://github.com/user-attachments/assets/ee4e946d-f350-4dee-9abf-131cb8e1d96b" />
 AI starts sabotaging the code 
 
+
 <img width="1917" height="857" alt="chaoside3" src="https://github.com/user-attachments/assets/b86909fb-5de4-42c7-a947-4056306a45b0" />
 Code submitted and you successfully beat the AI
 
+
 # Diagrams
 <img width="901" height="1149" alt="Flowchart (2)" src="https://github.com/user-attachments/assets/7c10c17b-7ae0-4877-902c-84c519bc737a" />
+
 Workflow Diagram
 
 
