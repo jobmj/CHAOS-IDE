@@ -79,7 +79,7 @@ For Software:
 *Add caption explaining what this shows*
 
 # Diagrams
-![Workflow](Add your workflow/architecture diagram here)
+<img width="901" height="1149" alt="Flowchart (2)" src="https://github.com/user-attachments/assets/7c10c17b-7ae0-4877-902c-84c519bc737a" />
 *Add caption explaining your workflow*
 
 
