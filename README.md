@@ -90,8 +90,8 @@ Workflow Diagram
 This demonstration showcases the algorithmic gauntlet built into ChaosIDE, featuring popular coding problems from challenges.js such as Two Sum, Valid Palindrome, FizzBuzz, Valid Parentheses, and Maximum Subarray. The video highlights how each problem mounts with structured problem statements, input/output specifications, constraints, and sample cases alongside a clean Python starter stub. As you work through classic data structures and programming patterns—from two-pointer string validations to dynamic programming and hash lookups—the adversarial AI targets critical solution logic like loop ranges, conditionals, and array operations. The demo concludes with the built-in test assertion suites executing in the client-side WebAssembly terminal, validating every edge case and test before advancing to the next problem in the pool.
 
 ## Team Contributions
-- Jobin M John: [Specific contributions]
-- Mohamed Fahad Lal: [Specific contributions]
+- Jobin M John: Frontend Development, Model Tuning
+- Mohamed Fahad Lal: Frontend Development, Model Tuning
 
 ---
 Made with ❤️ at TinkerHub Useless Projects 
