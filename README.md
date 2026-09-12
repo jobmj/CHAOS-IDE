@@ -40,18 +40,22 @@ ollama pull qwen2.5-coder:7b
 ### 3. Start the local server with CORS enabled (Crucial for browser access)
 ### For macOS / Linux:
 ``` bash
-OLLAMA_ORIGINS="*" ollama serve ```
+OLLAMA_ORIGINS="*" ollama serve 
+```
 
 ### For Windows (Command Prompt):
+``` bash
 set OLLAMA_ORIGINS="*" && ollama serve
-
+```
 ---
 # Installation
 ### 1. Clone the repository
 git clone https://github.com/jobmj/useless_project.git
 
 ### 2. Navigate to the project directory
+``` bash
 cd chaos-ide
+```
 ## Run
 ### Option 1: Open index.html directly in any modern browser
 double-click index.html
