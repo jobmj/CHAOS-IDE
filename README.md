@@ -37,8 +37,9 @@ For Software:
 ### Prerequisite (Local AI Server Setup)
 ### 1. Install Ollama from https://ollama.com
 ### 2. Pull the quantized coding model
+``` bash
 ollama pull qwen2.5-coder:7b
-
+```
 ### 3. Start the local server with CORS enabled (Crucial for browser access)
 ### For macOS / Linux:
 ``` bash
