@@ -2,7 +2,8 @@
 
 
 
-# CHAOS IDE 🎯
+# chaos $\color{red}{\text{ide}}$
+
 
 
 ## Basic Details
