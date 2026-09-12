@@ -15,7 +15,8 @@
 
 
 ### Project Description
-A thrilling speedrun coding game where you race against an insuffarable AI coding agent and overcome their obstacles 
+A thrilling speedrun coding game where you race against an insufferable AI coding agent who throws sytanx/logical errors to your code and make it impossible to you to complete(but its POSSIBLE!).
+
 
 ### The Problem (that doesn't exist)
 Modern AI coding assistants are too boring (and very helpful too!). Programmers fully rely on these AI and doesnt put any efforts, making programming less challenging and no fun at all.
@@ -67,13 +68,14 @@ double-click index.html
 For Software:
 
 # Screenshots (Add at least 3)
-![Screenshot1](Add screenshot 1 here with proper name)
+<img width="868" height="662" alt="chaoside1" src="https://github.com/user-attachments/assets/39771d05-d5f5-474c-9be1-1d2c1921ea04" />
 *Add caption explaining what this shows*
 
-![Screenshot2](Add screenshot 2 here with proper name)
+<img width="1915" height="867" alt="chaoside2" src="https://github.com/user-attachments/assets/433756fc-e2c2-4b2a-ba32-005c1746168d" />
 *Add caption explaining what this shows*
 
-![Screenshot3](Add screenshot 3 here with proper name)
+
+<img width="1917" height="857" alt="chaoside3" src="https://github.com/user-attachments/assets/b86909fb-5de4-42c7-a947-4056306a45b0" />
 *Add caption explaining what this shows*
 
 # Diagrams
