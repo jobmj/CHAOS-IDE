@@ -39,7 +39,8 @@ ollama pull qwen2.5-coder:7b
 
 ### 3. Start the local server with CORS enabled (Crucial for browser access)
 ### For macOS / Linux:
-OLLAMA_ORIGINS="*" ollama serve
+``` bash
+OLLAMA_ORIGINS="*" ollama serve ```
 
 ### For Windows (Command Prompt):
 set OLLAMA_ORIGINS="*" && ollama serve
