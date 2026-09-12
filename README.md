@@ -1,4 +1,3 @@
-
 <img width="1280" height="640" alt="git (1)" src="https://github.com/user-attachments/assets/8920b256-2ba8-4988-b824-5351134eb4bd" />
 
 
@@ -68,27 +67,24 @@ double-click index.html
 For Software:
 
 # Screenshots (Add at least 3)
-<img width="868" height="662" alt="chaoside1" src="https://github.com/user-attachments/assets/c9f7c1a0-4722-421e-aa0c-c29aef12d46c" />
+![Screenshot1](Add screenshot 1 here with proper name)
 *Add caption explaining what this shows*
 
-<img width="1915" height="867" alt="chaoside2" src="https://github.com/user-attachments/assets/232cfbbc-1ba8-4fca-ada4-da45578fe6cb" />
+![Screenshot2](Add screenshot 2 here with proper name)
 *Add caption explaining what this shows*
 
-<img width="1917" height="857" alt="chaoside3" src="https://github.com/user-attachments/assets/cfaad18f-cbfc-4d56-9fc8-28c6c5c1febf" />
+![Screenshot3](Add screenshot 3 here with proper name)
 *Add caption explaining what this shows*
 
 # Diagrams
-<img width="901" height="1149" alt="Flowchart (2)" src="https://github.com/user-attachments/assets/0ab927ba-2eda-4889-aba2-3041c187016f" />
+![Workflow](Add your workflow/architecture diagram here)
 *Add caption explaining your workflow*
 
 
 ### Project Demo
 # Video
-[Add your demo video link here]
-*Explain what the video demonstrates*
+(https://drive.google.com/file/d/1CNEUoQ-jyp_ga1OI7e_WJzQmE7R6-rjJ/view?usp=sharing)
 
-# Additional Demos
-[Add any extra demo materials/links]
 
 ## Team Contributions
 - Jobin M John: [Specific contributions]
