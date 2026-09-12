@@ -2,47 +2,61 @@
 
 
 
-# [Project Name] 🎯
+# CHAOS IDE 🎯
 
 
 ## Basic Details
-### Team Name: [Name]
+### Team Name: Buggers
 
 
 ### Team Members
-- Team Lead: [Name] - [College]
-- Member 2: [Name] - [College]
-- Member 3: [Name] - [College]
+- Team Lead: Jobin M John - [TKM College of Engineering]
+- Member 2: Mohamed Fahad Lal - [TKM College of Engineering]
+
 
 ### Project Description
-[2-3 lines about what your project does]
+A thrilling speedrun coding game where you race against an insuffarable AI coding agent and overcome their obstacles 
 
 ### The Problem (that doesn't exist)
-[What ridiculous problem are you solving?]
+Modern AI coding assistants are too boring (and very helpful too!). Programmers fully rely on these AI and doesnt put any efforts, making programming less challenging and no fun at all.
 
 ### The Solution (that nobody asked for)
-[How are you solving it? Keep it fun!]
-
+Chaos IDE: A gamified "Evil AI Assistant" speedrun game.You are given simple algorithmic challenges, but the IDE alternates unpredictably creates error in you code (like changing syntax,changing logics etc) and then comes in safe mode where programmers get a short window to change all errors and submit the correct code.
 ## Technical Details
 ### Technologies/Components Used
 For Software:
-- [Languages used]
-- [Frameworks used]
-- [Libraries used]
-- [Tools used]
+- Languages used: HTML,CSS,JS
+- Libraries used: Monaco Editor Engine
+- Tools and on device AI Engine: Ollama,qwen2.5-coder:7b
 
-For Hardware:
-- [List main components]
-- [List specifications]
-- [List tools required]
 
 ### Implementation
 For Software:
-# Installation
-[commands]
+# Prerequisite (Local AI Server Setup)
+# 1. Install Ollama from https://ollama.com
+# 2. Pull the quantized coding model
+ollama pull qwen2.5-coder:7b
 
+# 3. Start the local server with CORS enabled (Crucial for browser access)
+# For macOS / Linux:
+OLLAMA_ORIGINS="*" ollama serve
+
+# For Windows (Command Prompt):
+set OLLAMA_ORIGINS="*" && ollama serve
+
+---
+# Installation
+# 1. Clone the repository
+git clone https://github.com/jobmj/useless_project.git
+
+# 2. Navigate to the project directory
+cd chaos-ide
 # Run
-[commands]
+# Option 1: Open index.html directly in any modern browser
+double-click index.html
+
+# Option 2: Launch with VS Code Live Server extension
+# Click 'Go Live' from the status bar in VS Code
 
 ### Project Documentation
 For Software:
@@ -61,24 +75,6 @@ For Software:
 ![Workflow](Add your workflow/architecture diagram here)
 *Add caption explaining your workflow*
 
-For Hardware:
-
-# Schematic & Circuit
-![Circuit](Add your circuit diagram here)
-*Add caption explaining connections*
-
-![Schematic](Add your schematic diagram here)
-*Add caption explaining the schematic*
-
-# Build Photos
-![Components](Add photo of your components here)
-*List out all components shown*
-
-![Build](Add photos of build process here)
-*Explain the build steps*
-
-![Final](Add photo of final product here)
-*Explain the final build*
 
 ### Project Demo
 # Video
@@ -89,9 +85,8 @@ For Hardware:
 [Add any extra demo materials/links]
 
 ## Team Contributions
-- [Name 1]: [Specific contributions]
-- [Name 2]: [Specific contributions]
-- [Name 3]: [Specific contributions]
+- Jobin M John: [Specific contributions]
+- Mohamed Fahad Lal: [Specific contributions]
 
 ---
 Made with ❤️ at TinkerHub Useless Projects 
