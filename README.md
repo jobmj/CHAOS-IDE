@@ -51,7 +51,7 @@ set OLLAMA_ORIGINS="*" && ollama serve
 ---
 # Installation
 ### 1. Clone the repository
-git clone https://github.com/jobmj/useless_project.git
+git clone https://github.com/jobmj/CHAOS-IDE.git
 
 ### 2. Navigate to the project directory
 ``` bash
