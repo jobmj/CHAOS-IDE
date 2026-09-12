@@ -2,7 +2,7 @@
 
 
 
-# chaos $\color{red}{\text{ide}}$
+# CHAOS-$\color{red}{\text{IDE}}$
 
 
 
