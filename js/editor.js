@@ -2,6 +2,7 @@ let isMutating = false;
 let activeDecorations = [];
 let programmaticUpdate = false;
 
+// Circumference for r=75 (2 * PI * 75)
 const CIRCUMFERENCE = 471.24;
 
 const DIFFICULTY_CONFIG = {
@@ -28,12 +29,20 @@ let attackTimerInterval = null;
  * Formats and renders HackerRank-style challenge specifications
  */
 function renderProblemSpec(ch) {
-    document.getElementById("spec-title").innerText = ch.title;
-    document.getElementById("spec-category").innerText = ch.category;
-    
+    const titleEl = document.getElementById("spec-title");
+    const catEl = document.getElementById("spec-category");
     const diffBadge = document.getElementById("spec-diff-badge");
-    diffBadge.innerText = ch.difficultyTag || "EASY";
-    diffBadge.className = `spec-difficulty-badge badge-${(ch.difficultyTag || 'easy').toLowerCase()}`;
+    const bodyEl = document.getElementById("spec-body");
+
+    if (titleEl) titleEl.innerText = ch.title;
+    if (catEl) catEl.innerText = ch.category;
+    
+    if (diffBadge) {
+        diffBadge.innerText = ch.difficultyTag || "EASY";
+        diffBadge.className = `spec-difficulty-badge badge-${(ch.difficultyTag || 'easy').toLowerCase()}`;
+    }
+
+    if (!bodyEl) return;
 
     let html = `
         <div>
@@ -72,11 +81,11 @@ function renderProblemSpec(ch) {
         </div>
     `;
 
-    document.getElementById("spec-body").innerHTML = html;
+    bodyEl.innerHTML = html;
 }
 
 /**
- * Loads problem and puts editor into standby
+ * Loads problem and resets editor into standby
  */
 function loadChallengeUI(challenge) {
     renderProblemSpec(challenge);
@@ -117,6 +126,8 @@ function setStandbyState() {
     }
     if (gaugeCircle) {
         gaugeCircle.className = "gauge-fill standby-mode";
+        gaugeCircle.style.stroke = "url(#standbyGrad)";
+        gaugeCircle.style.filter = "none";
         gaugeCircle.style.strokeDashoffset = CIRCUMFERENCE;
     }
 
@@ -153,18 +164,20 @@ function startAttackPhase() {
     }
     if (gaugeCircle) {
         gaugeCircle.className = "gauge-fill";
+        gaugeCircle.style.stroke = "url(#attackGrad)";
+        gaugeCircle.style.filter = "none";
     }
 
     renderRadialClock(currentPhaseSecondsLeft, "SEC REMAIN", 0);
 
-    // 1. Attack timer cadence
+    // 1. Attack cadence timer
     attackTimerInterval = setInterval(() => {
         if (!isCoolingDown && !isMutating && isGameStarted) {
             triggerSabotageEvent();
         }
     }, conf.strikeCadenceMs);
 
-    // 2. Countdown loop
+    // 2. Overload countdown loop
     masterLoopInterval = setInterval(() => {
         currentPhaseSecondsLeft--;
         const progressRatio = (phaseTotalSeconds - currentPhaseSecondsLeft) / phaseTotalSeconds;
@@ -202,6 +215,8 @@ function startCooldownPhase() {
     }
     if (gaugeCircle) {
         gaugeCircle.className = "gauge-fill cooling-mode";
+        gaugeCircle.style.stroke = "url(#cooldownGrad)";
+        gaugeCircle.style.filter = "none";
     }
 
     renderRadialClock(currentPhaseSecondsLeft, "SEC SAFE", 1);
@@ -217,6 +232,9 @@ function startCooldownPhase() {
     }, 1000);
 }
 
+/**
+ * Handles circular gauge progress and crisp stroke dashoffset (glow-free)
+ */
 function renderRadialClock(displayVal, unitText, ratio) {
     const circle = document.getElementById('gauge-circle-fill');
     const valText = document.getElementById('meter-digital-val');
@@ -229,6 +247,7 @@ function renderRadialClock(displayVal, unitText, ratio) {
         const clampedRatio = Math.max(0, Math.min(1, ratio));
         const offset = CIRCUMFERENCE - (clampedRatio * CIRCUMFERENCE);
         circle.style.strokeDashoffset = offset;
+        circle.style.filter = "none";
     }
 }
 
@@ -277,7 +296,7 @@ function setupMonaco() {
             }
         });
 
-        // Instant attack on Enter if currently under active attack phase
+        // Instant attack trigger on Enter if active
         window.editor.onKeyUp((e) => {
             if (e.keyCode === monaco.KeyCode.Enter && isGameStarted && !isCoolingDown && !isMutating) {
                 setTimeout(() => triggerSabotageEvent(), 80);
@@ -347,7 +366,7 @@ async function triggerSabotageEvent() {
 }
 
 /**
- * Staged Launch Sequence: Terminal Boot -> Difficulty Selection
+ * Launch Sequence: Terminal Boot -> Difficulty Select
  */
 function initLaunchModal() {
     const bootLines = [
@@ -373,7 +392,6 @@ function initLaunchModal() {
             lineIdx++;
             setTimeout(typeNextBootLine, 320);
         } else {
-            // Boot sequence complete: transition to difficulty selection
             setTimeout(() => {
                 terminalBox.style.display = "none";
                 diffStage.classList.add("active");
@@ -383,7 +401,6 @@ function initLaunchModal() {
 
     typeNextBootLine();
 
-    // Difficulty button selectors
     const diffButtons = document.querySelectorAll(".diff-card-btn");
     diffButtons.forEach(btn => {
         btn.addEventListener("click", () => {
@@ -408,10 +425,8 @@ function initLaunchModal() {
             diagLvl.innerText = isRandomDifficulty ? `🎲 LVL ${activeLevel}` : `LVL ${activeLevel}`;
         }
 
-        // Conceal launch overlay
         document.getElementById("launch-overlay").classList.add("hidden");
 
-        // Keep editor in standby until first edit
         setStandbyState();
 
         if (window.editor) {

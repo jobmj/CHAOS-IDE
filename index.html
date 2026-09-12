@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Orbitron:wght@600;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
     
-    <!-- Monaco Editor AMD Loader & Pyodide -->
+    <!-- Monaco Editor AMD Loader & Pyodide Engine -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 
@@ -627,7 +627,7 @@
             word-break: break-all;
         }
 
-        /* Column 3: Radar Telemetry */
+        /* Column 3: Radar Telemetry - CRISP VECTOR GRADIENT WITHOUT GLOW */
         .sidebar-telemetry {
             background: var(--bg-glass);
             backdrop-filter: blur(14px);
@@ -686,19 +686,19 @@
             stroke-linecap: round;
             stroke-dasharray: 471.24;
             stroke-dashoffset: 471.24;
-            transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
-            stroke: var(--neon-red);
-            filter: drop-shadow(0 0 12px var(--neon-red));
-        }
-
-        .gauge-fill.cooling-mode {
-            stroke: var(--neon-cyan);
-            filter: drop-shadow(0 0 14px var(--neon-cyan));
+            transition: stroke-dashoffset 0.3s ease;
+            stroke: url(#attackGrad);
+            filter: none !important;
         }
 
         .gauge-fill.standby-mode {
-            stroke: var(--neon-amber);
-            filter: drop-shadow(0 0 12px var(--neon-amber));
+            stroke: url(#standbyGrad);
+            filter: none !important;
+        }
+
+        .gauge-fill.cooling-mode {
+            stroke: url(#cooldownGrad);
+            filter: none !important;
         }
 
         .gauge-center-data {
@@ -757,7 +757,7 @@
             text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
         }
 
-        /* Targeted Neon Red Spike Highlight */
+        /* Targeted Neon Red Line Pulse Highlight */
         @keyframes neonLineSpike {
             0% {
                 background-color: rgba(255, 0, 60, 0.85);
@@ -893,13 +893,35 @@
                 </div>
             </section>
 
-            <!-- Right: Circular Radar Telemetry -->
+            <!-- Right: Circular Radar Telemetry with Dynamic Crisp Gradients -->
             <aside class="sidebar-telemetry">
                 <div class="radar-card">
                     <span class="radar-title" id="meter-label">CORE TEMPERATURE</span>
                     
                     <div class="circular-gauge-container">
                         <svg class="gauge-svg" viewBox="0 0 190 190">
+                            <defs>
+                                <!-- Overload Transition: Green -> Amber -> Neon Red -->
+                                <linearGradient id="attackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="var(--neon-green)" />
+                                    <stop offset="50%" stop-color="var(--neon-amber)" />
+                                    <stop offset="100%" stop-color="var(--neon-red)" />
+                                </linearGradient>
+
+                                <!-- Cooldown Phase: Cyan -> Electric Blue -->
+                                <linearGradient id="cooldownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#00ffcc" />
+                                    <stop offset="50%" stop-color="var(--neon-cyan)" />
+                                    <stop offset="100%" stop-color="#0066ff" />
+                                </linearGradient>
+
+                                <!-- Standby Idle Gradient -->
+                                <linearGradient id="standbyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#3a4a6b" />
+                                    <stop offset="100%" stop-color="var(--neon-amber)" />
+                                </linearGradient>
+                            </defs>
+
                             <circle class="gauge-track" cx="95" cy="95" r="75"></circle>
                             <circle id="gauge-circle-fill" class="gauge-fill standby-mode" cx="95" cy="95" r="75"></circle>
                         </svg>
@@ -930,9 +952,9 @@
     </div>
 
     <!-- Scripts with Cache Busters -->
-    <script src="js/challenges.js?v=5"></script>
-    <script src="js/llm.js?v=5"></script>
-    <script src="js/editor.js?v=5"></script>
-    <script src="js/gaslight.js?v=5"></script>
+    <script src="js/challenges.js?v=6"></script>
+    <script src="js/llm.js?v=6"></script>
+    <script src="js/editor.js?v=6"></script>
+    <script src="js/gaslight.js?v=6"></script>
 </body>
 </html>
