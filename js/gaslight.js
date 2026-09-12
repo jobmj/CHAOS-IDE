@@ -10,8 +10,22 @@ function printToTerminal(text, color = "#00f0ff") {
     }
 }
 
+async function streamOutput(text, color = "#00f0ff") {
+    const out = document.getElementById("console-output");
+    if (!out) return;
+    out.style.color = color;
+    out.innerText = "";
+    
+    const lines = text.split("\n");
+    for (let line of lines) {
+        out.innerText += line + "\n";
+        out.parentElement.scrollTop = out.parentElement.scrollHeight;
+        await new Promise(r => setTimeout(r, 40));
+    }
+}
+
 /**
- * Initializes Pyodide asynchronously in background without blocking Monaco or the circular meter
+ * Initializes Pyodide asynchronously in background without blocking Monaco or circular meter
  */
 async function initPyodideRuntime() {
     printToTerminal(">> [SYSTEM]: INITIALIZING NEON WEBASSEMBLY RUNTIME...", "#00f0ff");
@@ -52,14 +66,13 @@ Serve this directory with a local HTTP server:
         isPythonLoading = false;
         printToTerminal(
 `>> [RUNTIME READY]: CPython 3.12 WebAssembly Kernel Online.
->> Survive the attack phase until meltdown, clean the code, and click 'Run & Verify'.`, 
+>> Survive the attack phase, repair injected mutations, and click 'Run & Verify'.`, 
             "#00ff66"
         );
     } catch (err) {
         isPythonLoading = false;
         pyodideBootError = String(err);
         printToTerminal(`>> [FATAL BOOT ERROR]:\n${err}`, "#ff003c");
-        console.error("[Pyodide Boot]", err);
     }
 }
 
@@ -98,10 +111,8 @@ execution_result = {
 }
 
 try:
-    # 1. Execute User Solution
 ${userCode.split('\n').map(l => '    ' + l).join('\n')}
 
-    # 2. Execute Test Assertions
 ${testSuiteCode.split('\n').map(l => '    ' + l).join('\n')}
 
     execution_result["passed"] = True
@@ -153,23 +164,11 @@ function initSubmissionHandler() {
         runBtn.innerText = originalText;
 
         if (res.passed) {
-            printToTerminal(
-`[STATUS: MISSION ACCOMPLISHED]
-============================================================
-${res.stdout}
->> ALL TEST CASES PASSED WITH EXIT CODE 0.
->> The defense protocol held! Click 'Next Mission' to advance.`,
-                "#00ff66"
-            );
+            const finalMsg = `[STATUS: MISSION ACCOMPLISHED]\n============================================================\n${res.stdout}\n>> ALL TEST CASES PASSED WITH EXIT CODE 0.\n>> Defense protocol held! Click 'Next Mission' to advance.`;
+            await streamOutput(finalMsg, "#00ff66");
         } else {
-            printToTerminal(
-`[STATUS: COMPILATION / ASSERTION BREACH]
-============================================================
-${res.stderr || "Unknown runtime execution error."}
-
->> [HINT]: Inspect line mutations and clean up syntax flaws before re-verifying.`,
-                "#ff003c"
-            );
+            const errorMsg = `[STATUS: COMPILATION / ASSERTION BREACH]\n============================================================\n${res.stderr || "Unknown runtime execution error."}\n\n>> [HINT]: Inspect line mutations and clean syntax flaws before re-verifying.`;
+            await streamOutput(errorMsg, "#ff003c");
         }
     });
 }

@@ -48,6 +48,30 @@
             -webkit-font-smoothing: antialiased;
         }
 
+        /* CRT Scanline Overlay */
+        .master-app {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background: radial-gradient(circle at 50% 0%, #151824 0%, var(--bg-void) 80%);
+        }
+
+        .master-app::before {
+            content: " ";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.22) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
         /* ================= 1. LAUNCH & BOOT OVERLAY ================= */
         #launch-overlay {
             position: fixed;
@@ -111,7 +135,6 @@
             text-transform: uppercase;
         }
 
-        /* Terminal Boot Window */
         .boot-terminal {
             background: #04050a;
             border: 1px solid #161e38;
@@ -140,7 +163,6 @@
             51%, 100% { opacity: 0; }
         }
 
-        /* Difficulty Selection State */
         .difficulty-stage {
             display: none;
             flex-direction: column;
@@ -232,14 +254,6 @@
         }
 
         /* ================= 2. MAIN APPLICATION WORKSPACE ================= */
-        .master-app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            width: 100vw;
-            background: radial-gradient(circle at 50% 0%, #151824 0%, var(--bg-void) 80%);
-        }
-
         .neon-toolbar {
             height: 56px;
             background: var(--bg-glass);
@@ -365,7 +379,13 @@
             transform: scale(1.02);
         }
 
-        /* 3-Column Split Viewport */
+        /* 3-Column Split Viewport with Turn-On Animation */
+        @keyframes crtTurnOn {
+            0% { transform: scaleY(0.005) scaleX(0.8); opacity: 0; filter: brightness(3); }
+            50% { transform: scaleY(1) scaleX(0.98); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        }
+
         .workspace-viewport {
             display: grid;
             grid-template-columns: 460px 1fr 290px;
@@ -373,6 +393,7 @@
             min-height: 0;
             padding: 12px 16px;
             gap: 14px;
+            animation: crtTurnOn 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
 
         /* Column 1: HackerRank Problem Spec */
@@ -536,6 +557,22 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+            transition: transform 0.05s ease;
+        }
+
+        /* Micro-glitch shockwave on sabotage */
+        @keyframes glitchJitter {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-3px, 1px); }
+            40% { transform: translate(3px, -2px); }
+            60% { transform: translate(-2px, -1px); }
+            80% { transform: translate(2px, 1px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .editor-glitch-active {
+            animation: glitchJitter 0.2s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            border-color: var(--neon-pink) !important;
         }
 
         .editor-top-banner {
@@ -627,7 +664,7 @@
             word-break: break-all;
         }
 
-        /* Column 3: Radar Telemetry - CRISP VECTOR GRADIENT WITHOUT GLOW */
+        /* Column 3: Radar Telemetry - CLEAN VECTOR GRADIENT, NO BLUR/GLOW */
         .sidebar-telemetry {
             background: var(--bg-glass);
             backdrop-filter: blur(14px);
@@ -714,7 +751,16 @@
             font-size: 26px;
             font-weight: 900;
             color: #ffffff;
-            text-shadow: 0 0 18px rgba(255,255,255,0.6);
+            transition: all 0.2s ease;
+        }
+
+        @keyframes urgencyPulse {
+            0%, 100% { transform: scale(1); color: #ffffff; }
+            50% { transform: scale(1.18); color: var(--neon-red); }
+        }
+
+        .critical-tick {
+            animation: urgencyPulse 0.5s ease infinite !important;
         }
 
         .gauge-unit {
@@ -757,7 +803,7 @@
             text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
         }
 
-        /* Targeted Neon Red Line Pulse Highlight */
+        /* Targeted Neon Red Spike Highlight */
         @keyframes neonLineSpike {
             0% {
                 background-color: rgba(255, 0, 60, 0.85);
@@ -787,7 +833,7 @@
     </style>
 </head>
 <body>
-    <!-- 1. STAGED LAUNCH OVERLAY (BOOT ANIMATION -> DIFFICULTY SELECTION) -->
+    <!-- 1. STAGED LAUNCH OVERLAY (BOOT SEQUENCE -> DIFFICULTY SELECT) -->
     <div id="launch-overlay">
         <div class="launch-card">
             <div class="launch-title-box">
@@ -795,13 +841,11 @@
                 <p class="launch-sub">Adversarial Code Survival Terminal</p>
             </div>
 
-            <!-- Stage A: Terminal Boot Sequence Animation -->
             <div id="boot-terminal-box" class="boot-terminal">
                 <div id="boot-stream"></div>
                 <span class="boot-cursor"></span>
             </div>
 
-            <!-- Stage B: Difficulty Configuration Modal -->
             <div id="difficulty-stage-box" class="difficulty-stage">
                 <p class="launch-instruction">
                     Select threat matrix profile. The IDE workspace mounts in standby mode. 
@@ -836,7 +880,7 @@
         </div>
     </div>
 
-    <!-- 2. MAIN APPLICATION -->
+    <!-- 2. MAIN APPLICATION WORKSPACE -->
     <div class="master-app">
         <header class="neon-toolbar">
             <div class="brand-core">
@@ -854,7 +898,7 @@
         </header>
 
         <main class="workspace-viewport">
-            <!-- Left: HackerRank Problem Specification -->
+            <!-- Left: HackerRank Problem Spec -->
             <section class="problem-spec-panel">
                 <div class="spec-header">
                     <div class="spec-meta-row">
@@ -864,12 +908,10 @@
                     <h2 class="spec-title" id="spec-title">Two Sum</h2>
                 </div>
 
-                <div class="spec-scrollable-body" id="spec-body">
-                    <!-- Populated dynamically -->
-                </div>
+                <div class="spec-scrollable-body" id="spec-body"></div>
             </section>
 
-            <!-- Center: Monaco Editor + Terminal Output -->
+            <!-- Center: Editor & Terminal -->
             <section class="workspace-center">
                 <div class="editor-enclosure">
                     <div class="editor-top-banner">
@@ -893,7 +935,7 @@
                 </div>
             </section>
 
-            <!-- Right: Circular Radar Telemetry with Dynamic Crisp Gradients -->
+            <!-- Right: Vector Gradient Radar -->
             <aside class="sidebar-telemetry">
                 <div class="radar-card">
                     <span class="radar-title" id="meter-label">CORE TEMPERATURE</span>
@@ -901,21 +943,18 @@
                     <div class="circular-gauge-container">
                         <svg class="gauge-svg" viewBox="0 0 190 190">
                             <defs>
-                                <!-- Overload Transition: Green -> Amber -> Neon Red -->
                                 <linearGradient id="attackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stop-color="var(--neon-green)" />
                                     <stop offset="50%" stop-color="var(--neon-amber)" />
                                     <stop offset="100%" stop-color="var(--neon-red)" />
                                 </linearGradient>
 
-                                <!-- Cooldown Phase: Cyan -> Electric Blue -->
                                 <linearGradient id="cooldownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stop-color="#00ffcc" />
                                     <stop offset="50%" stop-color="var(--neon-cyan)" />
                                     <stop offset="100%" stop-color="#0066ff" />
                                 </linearGradient>
 
-                                <!-- Standby Idle Gradient -->
                                 <linearGradient id="standbyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stop-color="#3a4a6b" />
                                     <stop offset="100%" stop-color="var(--neon-amber)" />
@@ -952,9 +991,9 @@
     </div>
 
     <!-- Scripts with Cache Busters -->
-    <script src="js/challenges.js?v=6"></script>
-    <script src="js/llm.js?v=6"></script>
-    <script src="js/editor.js?v=6"></script>
-    <script src="js/gaslight.js?v=6"></script>
+    <script src="js/challenges.js?v=7"></script>
+    <script src="js/llm.js?v=7"></script>
+    <script src="js/editor.js?v=7"></script>
+    <script src="js/gaslight.js?v=7"></script>
 </body>
 </html>

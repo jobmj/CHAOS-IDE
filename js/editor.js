@@ -2,7 +2,6 @@ let isMutating = false;
 let activeDecorations = [];
 let programmaticUpdate = false;
 
-// Circumference for r=75 (2 * PI * 75)
 const CIRCUMFERENCE = 471.24;
 
 const DIFFICULTY_CONFIG = {
@@ -24,6 +23,62 @@ let currentPhaseSecondsLeft = 0;
 let phaseTotalSeconds = 20;
 let masterLoopInterval = null;
 let attackTimerInterval = null;
+
+/**
+ * Procedural Web Audio API sound synthesizer
+ */
+class ChaosAudio {
+    constructor() {
+        this.ctx = null;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                this.ctx = new AudioContext();
+            }
+        }
+    }
+
+    // High-pitched laser zap when a line corrupts
+    playStrike() {
+        if (!this.ctx) return;
+        try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.15);
+        } catch (e) {}
+    }
+
+    // Calm sine chime when entering Cooldown
+    playCooldown() {
+        if (!this.ctx) return;
+        try {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(640, this.ctx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.4);
+        } catch (e) {}
+    }
+}
+
+const sfx = new ChaosAudio();
 
 /**
  * Formats and renders HackerRank-style challenge specifications
@@ -133,7 +188,10 @@ function setStandbyState() {
 
     const valText = document.getElementById('meter-digital-val');
     const unitEl = document.getElementById('meter-digital-unit');
-    if (valText) valText.innerText = "PAUSED";
+    if (valText) {
+        valText.innerText = "PAUSED";
+        valText.classList.remove("critical-tick");
+    }
     if (unitEl) unitEl.innerText = "TYPE TO START";
 }
 
@@ -170,14 +228,12 @@ function startAttackPhase() {
 
     renderRadialClock(currentPhaseSecondsLeft, "SEC REMAIN", 0);
 
-    // 1. Attack cadence timer
     attackTimerInterval = setInterval(() => {
         if (!isCoolingDown && !isMutating && isGameStarted) {
             triggerSabotageEvent();
         }
     }, conf.strikeCadenceMs);
 
-    // 2. Overload countdown loop
     masterLoopInterval = setInterval(() => {
         currentPhaseSecondsLeft--;
         const progressRatio = (phaseTotalSeconds - currentPhaseSecondsLeft) / phaseTotalSeconds;
@@ -193,6 +249,8 @@ function startCooldownPhase() {
     isCoolingDown = true;
     clearInterval(masterLoopInterval);
     clearInterval(attackTimerInterval);
+
+    sfx.playCooldown();
 
     const conf = DIFFICULTY_CONFIG[activeLevel];
     phaseTotalSeconds = conf.cooldownSec;
@@ -240,7 +298,14 @@ function renderRadialClock(displayVal, unitText, ratio) {
     const valText = document.getElementById('meter-digital-val');
     const unitEl = document.getElementById('meter-digital-unit');
 
-    if (valText) valText.innerText = displayVal;
+    if (valText) {
+        valText.innerText = displayVal;
+        if (typeof displayVal === "number" && displayVal <= 5 && isGameStarted) {
+            valText.classList.add("critical-tick");
+        } else {
+            valText.classList.remove("critical-tick");
+        }
+    }
     if (unitEl) unitEl.innerText = unitText;
 
     if (circle) {
@@ -349,6 +414,16 @@ async function triggerSabotageEvent() {
                 }
             ]);
 
+            sfx.playStrike();
+
+            // Screen micro-glitch
+            const editorBox = document.querySelector(".editor-enclosure");
+            if (editorBox) {
+                editorBox.classList.add("editor-glitch-active");
+                setTimeout(() => editorBox.classList.remove("editor-glitch-active"), 200);
+            }
+
+            // Laser line spike
             activeDecorations = window.editor.deltaDecorations(activeDecorations, [
                 {
                     range: new monaco.Range(targetLineNumber, 1, targetLineNumber, mutatedText.length + 1),
@@ -390,7 +465,7 @@ function initLaunchModal() {
             streamEl.appendChild(line);
             terminalBox.scrollTop = terminalBox.scrollHeight;
             lineIdx++;
-            setTimeout(typeNextBootLine, 320);
+            setTimeout(typeNextBootLine, 300);
         } else {
             setTimeout(() => {
                 terminalBox.style.display = "none";
@@ -412,6 +487,8 @@ function initLaunchModal() {
 
     const startBtn = document.getElementById("launch-btn");
     startBtn.addEventListener("click", () => {
+        sfx.init();
+
         if (selectedDifficulty === "random") {
             isRandomDifficulty = true;
             activeLevel = Math.floor(Math.random() * 5) + 1;
