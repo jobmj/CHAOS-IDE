@@ -15,7 +15,7 @@
 
 
 ### Project Description
-A thrilling speedrun coding game where you race against an insufferable AI coding agent who throws sytanx/logical errors to your code and make it impossible to you to complete(but its POSSIBLE!).
+A thrilling speedrun coding game where you race against an insufferable AI coding agent who throws sytanx/logical errors to your code and make it impossible to you to complete(but its POSSIBLE! ).
 
 
 ### The Problem (that doesn't exist)
@@ -67,20 +67,20 @@ double-click index.html
 ### Project Documentation
 For Software:
 
-# Screenshots (Add at least 3)
+# Screenshots
 <img width="868" height="662" alt="chaoside1" src="https://github.com/user-attachments/assets/39771d05-d5f5-474c-9be1-1d2c1921ea04" />
-*Add caption explaining what this shows*
+Loading Page
 
 <img width="1915" height="867" alt="chaoside2" src="https://github.com/user-attachments/assets/433756fc-e2c2-4b2a-ba32-005c1746168d" />
-*Add caption explaining what this shows*
+Interactive IDE where you can test your skills against AI
 
 
 <img width="1917" height="857" alt="chaoside3" src="https://github.com/user-attachments/assets/b86909fb-5de4-42c7-a947-4056306a45b0" />
-*Add caption explaining what this shows*
+Code submitted and you successfully beaten the AI
 
 # Diagrams
 <img width="901" height="1149" alt="Flowchart (2)" src="https://github.com/user-attachments/assets/7c10c17b-7ae0-4877-902c-84c519bc737a" />
-*Add caption explaining your workflow*
+Workflow Diagram
 
 
 ### Project Demo
