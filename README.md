@@ -28,8 +28,8 @@ Chaos IDE: A gamified "Evil AI Assistant" speedrun game.You are given simple alg
 ### Technologies/Components Used
 For Software:
 - Languages used:**HTML,CSS,JS**
-- Libraries used:** Monaco Editor Engine**
-- Tools and on device AI Engine:** Ollama,qwen2.5-coder:7b**
+- Libraries used:**Monaco Editor Engine**
+- Tools and on device AI Engine:**Ollama,qwen2.5-coder:7b**
 
 
 ### Implementation
